@@ -4,9 +4,10 @@
 #include "MainMenu.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
+#include "Components/EditableTextBox.h"
+#include "Components/ComboBoxString.h"
+#include "Components/Slider.h"
 
-
-//TODO Add functionality to hosting and joining games
 
 bool UMainMenu::Initialize()
 {
@@ -32,6 +33,42 @@ bool UMainMenu::Initialize()
     BackButton2->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
 
     return true;
+}
+
+void UMainMenu::SetMenuSystem(IMenuSystem* MenuSystem)
+{
+    _MenuSystem = MenuSystem;
+}
+
+void UMainMenu::Setup()
+{
+    this->AddToViewport();
+    UWorld* world = GetWorld();
+    if (!ensure(world != nullptr)) return;
+
+    APlayerController* playerController = world->GetFirstPlayerController();
+    if (!ensure(playerController != nullptr)) return;
+
+    FInputModeUIOnly inputMode;
+    inputMode.SetWidgetToFocus(this->TakeWidget());
+    inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    playerController->SetInputMode(inputMode);
+    playerController->SetShowMouseCursor(true);
+}
+
+void UMainMenu::TearDown()
+{
+    UWorld* world = GetWorld();
+    if (!ensure(world != nullptr)) return;
+
+    APlayerController* playerController = world->GetFirstPlayerController();
+    if (!ensure(playerController != nullptr)) return;
+
+    playerController->SetShowMouseCursor(false);
+
+    FInputModeGameOnly inputMode;
+    playerController->SetInputMode(inputMode);
+    RemoveFromParent();
 }
 
 void UMainMenu::OnHostGameClicked()
@@ -67,6 +104,13 @@ void UMainMenu::OnQuitClicked()
 void UMainMenu::OnStartGameClicked()
 {
     UE_LOG(LogTemp, Warning, TEXT("Clicked Start Game"));
+    if (_MenuSystem != nullptr && ServerNameTextBox != nullptr && PasswordTextBox != nullptr) {
+        FString serverName = ServerNameTextBox->GetText().ToString();
+        FString serverPassword = PasswordTextBox->GetText().ToString();
+        FString serverType = ServerTypeDropdown->GetSelectedOption();
+        int32 playerLimit = PlayerLimitSlider->GetValue();
+        _MenuSystem->HostGame(serverName, serverPassword, serverType, playerLimit);
+    }
 }
 
 void UMainMenu::OnBackClicked()

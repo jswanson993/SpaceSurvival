@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "MenuSystem.h"
 #include "MainMenu.generated.h"
 
 /**
@@ -57,7 +58,14 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* BackButton2;
 
+	void SetMenuSystem(IMenuSystem* MenuSystem);
+	void Setup();
+	void TearDown();
+
 private:
+
+	IMenuSystem* _MenuSystem;
+
 	UFUNCTION()
 	void OnHostGameClicked();
 	UFUNCTION()
