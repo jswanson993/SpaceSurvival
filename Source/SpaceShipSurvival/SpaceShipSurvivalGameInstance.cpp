@@ -26,6 +26,8 @@ void USpaceShipSurvivalGameInstance::Init()
 		if (_OnlineSession.IsValid()) {
 			_OnlineSession->OnCreateSessionCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnCreateSessionComplete);
 			_OnlineSession->OnDestroySessionCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnDestroySessionComplete);
+			_OnlineSession->OnFindSessionsCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnFindSessionsComplete);
+			_OnlineSession->OnFindFriendSessionCompleteDelegates->AddUObject(this, &USpaceShipSurvivalGameInstance::OnFindFriendSessionsComplete);
 		}
 	}
 
@@ -55,8 +57,25 @@ void USpaceShipSurvivalGameInstance::HostGame(FString ServerName, FString Passwo
 
 void USpaceShipSurvivalGameInstance::JoinGame()
 {
-	if (MainMenu != nullptr) {
-		MainMenu->TearDown();
+}
+
+void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
+{
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	if(SessionSearch.IsValid()){
+		SessionSearch->MaxSearchResults = 100;
+		if (_OnlineSession.IsValid()) {
+			if(FriendsOnly){
+				//_OnlineSession
+			}
+			else {
+				UE_LOG(LogTemp, Warning, TEXT("Starting Session Search"));
+				_OnlineSession->FindSessions(0, SessionSearch.ToSharedRef());
+			}
+		}
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Could not start session search"));
 	}
 }
 
@@ -72,10 +91,11 @@ void USpaceShipSurvivalGameInstance::LoadMenu()
 
 void USpaceShipSurvivalGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	if(MainMenu != nullptr && bWasSuccessful){
+	if(MainMenu != nullptr && bWasSuccessful && _OnlineSession != nullptr){
 		MainMenu->TearDown();
 		UWorld* world = GetWorld();
-		world->ServerTravel("/Game/FirstPerson/Maps/FirstPersonMap");
+		_OnlineSession->StartSession(SessionName);
+		world->ServerTravel("/Game/FirstPerson/Maps/FirstPersonMap?listen");
 	}
 	else if (!bWasSuccessful) {
 		UE_LOG(LogTemp, Warning, TEXT("Could not create Sesion"));
@@ -90,6 +110,54 @@ void USpaceShipSurvivalGameInstance::OnDestroySessionComplete(FName SessionName,
 	}
 }
 
+void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Session Search Complete"));
+	TArray<FServerDetails> foundServers;
+	if (MainMenu != nullptr && bWasSuccessful && SessionSearch.IsValid()) {
+		for (auto sessionResult : SessionSearch->SearchResults) {
+			if (sessionResult.IsValid()) {
+				FServerDetails serverDetails;
+				FString serverName;
+				FString serverPassword;
+				if (sessionResult.Session.SessionSettings.Get("ServerName", serverName)) {
+					serverDetails.ServerName = serverName;
+				}
+				else {
+					serverDetails.ServerName = "Unknown";
+				}
+
+				if (sessionResult.Session.SessionSettings.Get("ServerPassword", serverPassword)) {
+					serverDetails.ServerPassword = serverPassword;
+				}
+				else {
+					serverDetails.ServerPassword = "Unknown";
+				}
+				if (sessionResult.Session.SessionSettings.NumPublicConnections == 0) {
+					serverDetails.ServerType = "Private";
+					serverDetails.Players = FString::Printf(TEXT("%d/%d"),
+					sessionResult.Session.NumOpenPrivateConnections,
+					sessionResult.Session.SessionSettings.NumPrivateConnections);
+				}
+				else {
+					serverDetails.ServerType = "Public";
+					serverDetails.Players = FString::Printf(TEXT("%d/%d"),
+					sessionResult.Session.NumOpenPublicConnections,
+					sessionResult.Session.SessionSettings.NumPublicConnections);
+				}
+			}
+		}
+
+	}
+}
+
+void USpaceShipSurvivalGameInstance::OnFindFriendSessionsComplete(int32 LocalUserNum, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& FriendSearchResult)
+{
+	if (MainMenu != nullptr) {
+		MainMenu->TearDown();
+	}
+}
+
 void USpaceShipSurvivalGameInstance::CreateSession() {
 
 		FOnlineSessionSettings sessionSettings;
@@ -98,6 +166,7 @@ void USpaceShipSurvivalGameInstance::CreateSession() {
 		sessionSettings.bAllowJoinViaPresence = true;
 		sessionSettings.bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL"; //Use lan connection if testing
 		sessionSettings.bUseLobbiesIfAvailable = true;
+		sessionSettings.bShouldAdvertise = true;
 		sessionSettings.bUsesPresence = true;
 
 		if (DesiredServerType.Equals("Public")) {
@@ -112,7 +181,7 @@ void USpaceShipSurvivalGameInstance::CreateSession() {
 			}
 		}
 
-		sessionSettings.Set("ServerName", DesiredServerName);
-		sessionSettings.Set("ServerPassword", DesiredPassword);
+		sessionSettings.Set("ServerName", DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		sessionSettings.Set("ServerPassword", DesiredPassword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		_OnlineSession->CreateSession(0, NAME_GameSession, sessionSettings);
 }

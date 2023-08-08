@@ -24,4 +24,5 @@ class SPACESHIPSURVIVAL_API IMenuSystem
 public:
 	virtual void HostGame(FString ServerName, FString Password, FString ServerType, int32 PlayerLimit) = 0;
 	virtual void JoinGame() = 0;
+	virtual void FindSessions(bool FriendsOnly) = 0;
 };

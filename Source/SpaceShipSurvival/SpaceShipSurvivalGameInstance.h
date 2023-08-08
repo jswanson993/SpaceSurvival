@@ -26,6 +26,8 @@ public:
 
 	void JoinGame() override;
 
+	void FindSessions(bool FriendsOnly) override;
+
 	UFUNCTION(BlueprintCallable)
 	void LoadMenu();
 
@@ -38,9 +40,12 @@ private:
 	int32 DesiredPlayerLimit;
 
 	IOnlineSessionPtr _OnlineSession;
+	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
 
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnFindSessionsComplete(bool bWasSuccessful);
+	void OnFindFriendSessionsComplete(int32 LocalUserNum, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& FriendSearchResult);
 
 	void CreateSession();
 	

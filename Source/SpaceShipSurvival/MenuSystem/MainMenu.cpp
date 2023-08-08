@@ -35,6 +35,16 @@ bool UMainMenu::Initialize()
     return true;
 }
 
+void UMainMenu::SetSessions(TArray<FServerDetails> Sessions)
+{
+    FoundServers = Sessions;
+    for (FServerDetails server : Sessions) {
+        //Create server line
+        //Add to Server List
+        UE_LOG(LogTemp, Warning, TEXT("Found server: "), *server.ServerName);
+    }
+}
+
 void UMainMenu::SetMenuSystem(IMenuSystem* MenuSystem)
 {
     _MenuSystem = MenuSystem;
@@ -87,6 +97,7 @@ void UMainMenu::OnJoinGameClicked()
 {
     if (MenuSwitcher != nullptr && JoinMenu != nullptr) {
         MenuSwitcher->SetActiveWidget(JoinMenu);
+        _MenuSystem->FindSessions(false);
     }
 }
 /*Open Options menu*/

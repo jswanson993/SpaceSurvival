@@ -7,6 +7,16 @@
 #include "MenuSystem.h"
 #include "MainMenu.generated.h"
 
+USTRUCT()
+struct FServerDetails {
+	GENERATED_BODY()
+
+	FString ServerName;
+	FString ServerPassword;
+	FString ServerType;
+	FString Players;
+};
+
 /**
  * 
  */
@@ -17,6 +27,8 @@ class SPACESHIPSURVIVAL_API UMainMenu : public UUserWidget
 
 public:
 	virtual bool Initialize() override;
+
+	void SetSessions(TArray<FServerDetails> Sessions);
 
 public:
 	//Menu Components
@@ -80,5 +92,7 @@ private:
 	void OnBackClicked();
 	UFUNCTION()
 	void OnJoinClicked();
+
+	TArray<FServerDetails> FoundServers;
 	
 };
