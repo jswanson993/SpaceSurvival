@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "MenuSystem/MenuSystem.h"
+#include "OnlineSubsystem.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "SpaceShipSurvivalGameInstance.generated.h"
 
 /**
@@ -30,5 +32,16 @@ public:
 private:
 	TSubclassOf<class UMainMenu> MainMenuClass;
 	class UMainMenu* MainMenu;
+	FString DesiredServerName;
+	FString DesiredPassword;
+	FString DesiredServerType;
+	int32 DesiredPlayerLimit;
+
+	IOnlineSessionPtr _OnlineSession;
+
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
+
+	void CreateSession();
 	
 };
