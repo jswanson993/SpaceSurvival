@@ -9,6 +9,7 @@
 
 USpaceShipSurvivalGameInstance::USpaceShipSurvivalGameInstance(const FObjectInitializer& ObjectInitializer)
 {
+	//Find the Main Menu Widget in the content browser
 	static ConstructorHelpers::FClassFinder<UMainMenu> MainMenuClassFinder(TEXT("/Game/MenuSystem/WBP_MainMenu"));
 	if (MainMenuClassFinder.Class != nullptr) {
 		MainMenuClass = MainMenuClassFinder.Class;
