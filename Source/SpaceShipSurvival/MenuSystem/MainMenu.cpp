@@ -53,10 +53,12 @@ void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
     ServerList->ClearChildren();
     UWorld* world = GetWorld();
     FoundServers = Servers;
+    int32 index = 0;
     for (FServerDetails &server : Servers) {
         //Create server line
         UServerLine* serverLine = CreateWidget<UServerLine>(world, ServerLineClass);
         if(serverLine != nullptr){
+            UE_LOG(LogTemp, Warning, TEXT("Creating server line %s: "), *server.ServerName);
             serverLine->bIsSelected = false;
             serverLine->ServerNameText->SetText(FText::FromString(server.ServerName));
             serverLine->ServerTypeText->SetText(FText::FromString(server.ServerType));
@@ -65,10 +67,11 @@ void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
                 serverLine->bRequiresPassword = true;
                 serverLine->Password = server.ServerPassword;
             }
-
+            serverLine->Setup(this, index);
             //Add to Server List
             ServerList->AddChild(serverLine);
         }
+        index++;
 
     }
 }
