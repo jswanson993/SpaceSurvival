@@ -7,7 +7,20 @@
 #include "Components/EditableTextBox.h"
 #include "Components/ComboBoxString.h"
 #include "Components/Slider.h"
+#include "Components/Scrollbox.h"
+#include "UObject/ConstructorHelpers.h"
 
+#include "ServerLine.h"
+
+
+UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
+{
+    //Find the Main Menu Widget in the content browser
+    static ConstructorHelpers::FClassFinder<UMainMenu> ServerLineClassFinder(TEXT("/Game/MenuSystem/WBP_ServerLine"));
+    if (ServerLineClassFinder.Class != nullptr) {
+        ServerLineClass = ServerLineClassFinder.Class;
+    }
+}
 
 bool UMainMenu::Initialize()
 {
@@ -35,13 +48,14 @@ bool UMainMenu::Initialize()
     return true;
 }
 
-void UMainMenu::SetSessions(TArray<FServerDetails> Sessions)
+void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
 {
-    FoundServers = Sessions;
-    for (FServerDetails server : Sessions) {
+    ServerList->ClearChildren();
+    FoundServers = Servers;
+    for (FServerDetails &server : Servers) {
         //Create server line
+        UServerLine* serverLine = CreateWidget<UServerLine>(this, ServerLineClass);
         //Add to Server List
-        UE_LOG(LogTemp, Warning, TEXT("Found server: "), *server.ServerName);
     }
 }
 

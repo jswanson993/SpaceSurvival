@@ -26,9 +26,10 @@ class SPACESHIPSURVIVAL_API UMainMenu : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UMainMenu(const FObjectInitializer &ObjectInitializer);
 	virtual bool Initialize() override;
 
-	void SetSessions(TArray<FServerDetails> Sessions);
+	void SetServerList(TArray<FServerDetails> Servers);
 
 public:
 	//Menu Components
@@ -94,5 +95,5 @@ private:
 	void OnJoinClicked();
 
 	TArray<FServerDetails> FoundServers;
-	
+	TSubclassOf<class UServerLine> ServerLineClass;
 };

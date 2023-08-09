@@ -7,6 +7,9 @@
 #include "UObject/ConstructorHelpers.h"
 
 
+const FName SERVER_NAME_KEY = "ServerName";
+const FName PASSWORD_KEY = "Passowrd";
+
 USpaceShipSurvivalGameInstance::USpaceShipSurvivalGameInstance(const FObjectInitializer& ObjectInitializer)
 {
 	//Find the Main Menu Widget in the content browser
@@ -63,6 +66,7 @@ void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
 {
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
 	if(SessionSearch.IsValid()){
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		SessionSearch->MaxSearchResults = 100;
 		if (_OnlineSession.IsValid()) {
 			if(FriendsOnly){
@@ -104,7 +108,7 @@ void USpaceShipSurvivalGameInstance::OnCreateSessionComplete(FName SessionName, 
 
 void USpaceShipSurvivalGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	//Recreate the session after its been destoryed
+	//Recreate the session after its been destroyed
 	if (bWasSuccessful) {
 		CreateSession();
 	}
@@ -145,8 +149,10 @@ void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 					sessionResult.Session.NumOpenPublicConnections,
 					sessionResult.Session.SessionSettings.NumPublicConnections);
 				}
+				foundServers.Add(serverDetails);
 			}
 		}
+		MainMenu->SetServerList(foundServers);
 
 	}
 }
@@ -180,8 +186,8 @@ void USpaceShipSurvivalGameInstance::CreateSession() {
 				sessionSettings.bAllowJoinViaPresenceFriendsOnly = true;
 			}
 		}
-
-		sessionSettings.Set("ServerName", DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-		sessionSettings.Set("ServerPassword", DesiredPassword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *DesiredPassword)
+		sessionSettings.Set(SERVER_NAME_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		sessionSettings.Set(PASSWORD_KEY, DesiredPassword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		_OnlineSession->CreateSession(0, NAME_GameSession, sessionSettings);
 }
