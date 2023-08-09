@@ -28,4 +28,12 @@ public:
 	bool bRequiresPassword = false;
 	FString Password = "";
 
+
+	void Setup(class UMainMenu* Owner, int32 LineNum);
+private:
+	int32 Index;
+	class UMainMenu* Parent;
+
+	UFUNCTION()
+	void OnLineSelected();
 };

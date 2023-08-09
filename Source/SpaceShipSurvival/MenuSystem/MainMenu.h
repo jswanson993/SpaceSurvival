@@ -30,6 +30,7 @@ public:
 	virtual bool Initialize() override;
 
 	void SetServerList(TArray<FServerDetails> Servers);
+	void UpdateSelection(int32 Index);
 
 public:
 	//Menu Components
@@ -95,5 +96,5 @@ private:
 	void OnJoinClicked();
 
 	TArray<FServerDetails> FoundServers;
-	TSubclassOf<class UServerLine> ServerLineClass;
+	TSubclassOf<class UUserWidget> ServerLineClass;
 };

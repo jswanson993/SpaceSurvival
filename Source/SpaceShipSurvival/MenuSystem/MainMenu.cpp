@@ -8,15 +8,15 @@
 #include "Components/ComboBoxString.h"
 #include "Components/Slider.h"
 #include "Components/Scrollbox.h"
+#include "Components/TextBlock.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "ServerLine.h"
 
 
-UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
-{
+UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer){
     //Find the Main Menu Widget in the content browser
-    static ConstructorHelpers::FClassFinder<UMainMenu> ServerLineClassFinder(TEXT("/Game/MenuSystem/WBP_ServerLine"));
+    static ConstructorHelpers::FClassFinder<UUserWidget> ServerLineClassFinder(TEXT("/Game/MenuSystem/WBP_ServerLine"));
     if (ServerLineClassFinder.Class != nullptr) {
         ServerLineClass = ServerLineClassFinder.Class;
     }
@@ -51,11 +51,40 @@ bool UMainMenu::Initialize()
 void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
 {
     ServerList->ClearChildren();
+    UWorld* world = GetWorld();
     FoundServers = Servers;
     for (FServerDetails &server : Servers) {
         //Create server line
-        UServerLine* serverLine = CreateWidget<UServerLine>(this, ServerLineClass);
-        //Add to Server List
+        UServerLine* serverLine = CreateWidget<UServerLine>(world, ServerLineClass);
+        if(serverLine != nullptr){
+            serverLine->bIsSelected = false;
+            serverLine->ServerNameText->SetText(FText::FromString(server.ServerName));
+            serverLine->ServerTypeText->SetText(FText::FromString(server.ServerType));
+            serverLine->PlayersText->SetText(FText::FromString(server.Players));
+            if (server.ServerType == "Private") {
+                serverLine->bRequiresPassword = true;
+                serverLine->Password = server.ServerPassword;
+            }
+
+            //Add to Server List
+            ServerList->AddChild(serverLine);
+        }
+
+    }
+}
+
+void UMainMenu::UpdateSelection(int32 Index)
+{
+    for (int32 i = 0; i < ServerList->GetChildrenCount(); i++) {
+        auto line = Cast<UServerLine>(ServerList->GetChildAt(i));
+        if (line != nullptr) {
+            if (i == Index) {
+                line->bIsSelected = true;
+            }
+            else {
+                line->bIsSelected = false;
+            }
+        }
     }
 }
 
