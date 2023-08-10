@@ -12,6 +12,7 @@
 #include "UObject/ConstructorHelpers.h"
 
 #include "ServerLine.h"
+#include "CustomButton.h"
 
 
 UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer){
@@ -29,21 +30,21 @@ bool UMainMenu::Initialize()
 
     //Bind On Click Events
     if(!ensure(HostGameButton != nullptr)) return false;
-    HostGameButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostGameClicked);
+    HostGameButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnHostGameClicked);
     if (!ensure(JoinGameButton != nullptr)) return false;
-    JoinGameButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinGameClicked);
+    JoinGameButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinGameClicked);
     if (!ensure(OptionsButton != nullptr)) return false;
-    OptionsButton->OnClicked.AddDynamic(this, &UMainMenu::OnOptionsClicked);
+    OptionsButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnOptionsClicked);
     if (!ensure(QuitButton != nullptr)) return false;
-    QuitButton->OnClicked.AddDynamic(this, &UMainMenu::OnQuitClicked);
+    QuitButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnQuitClicked);
     if (!ensure(StartGameButton != nullptr)) return false;
-    StartGameButton->OnClicked.AddDynamic(this, &UMainMenu::OnStartGameClicked);
+    StartGameButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnStartGameClicked);
     if (!ensure(BackButton != nullptr)) return false;
-    BackButton->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
+    BackButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
     if (!ensure(JoinButton != nullptr)) return false;
-    JoinButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinClicked);
+    JoinButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinClicked);
     if (!ensure(BackButton2 != nullptr)) return false;
-    BackButton2->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
+    BackButton2->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
 
     return true;
 }

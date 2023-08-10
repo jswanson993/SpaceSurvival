@@ -32,7 +32,7 @@ public:
 	void LoadMenu();
 
 private:
-	TSubclassOf<class UMainMenu> MainMenuClass;
+	TSubclassOf<class UUserWidget> MainMenuClass;
 	class UMainMenu* MainMenu;
 	FString DesiredServerName;
 	FString DesiredPassword;

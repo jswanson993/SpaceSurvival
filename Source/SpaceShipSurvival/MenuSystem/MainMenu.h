@@ -40,13 +40,13 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* MainMenu;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* HostGameButton;
+	class UCustomButton* HostGameButton;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* JoinGameButton;
+	class UCustomButton* JoinGameButton;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* OptionsButton;
+	class UCustomButton* OptionsButton;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* QuitButton;
+	class UCustomButton* QuitButton;
 	//Host Menu Components
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* HostMenu;
@@ -59,18 +59,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class USlider* PlayerLimitSlider;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* StartGameButton;
+	class UCustomButton* StartGameButton;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* BackButton;
+	class UCustomButton* BackButton;
 	//Join Menu Components
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* JoinMenu;
 	UPROPERTY(meta = (BindWidget))
 	class UScrollBox* ServerList;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* JoinButton;
+	class UCustomButton* JoinButton;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* BackButton2;
+	class UCustomButton* BackButton2;
 
 	void SetMenuSystem(IMenuSystem* MenuSystem);
 	void Setup();

@@ -23,7 +23,8 @@ public:
 	class UTextBlock* ServerTypeText;
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* PlayersText;
-
+	
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsSelected = false;
 	bool bRequiresPassword = false;
 	FString Password = "";
