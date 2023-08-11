@@ -7,6 +7,8 @@
 #include "MenuSystem/MenuSystem.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include <Interfaces/OnlineFriendsInterface.h>
+#include "Interfaces/OnlineIdentityInterface.h"
 #include "SpaceShipSurvivalGameInstance.generated.h"
 
 /**
@@ -45,9 +47,11 @@ private:
 	FString DesiredPassword;
 	FString DesiredServerType;
 	int32 DesiredPlayerLimit;
-
 	IOnlineSessionPtr _OnlineSession;
 	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
+	IOnlineFriendsPtr _OnlineFriends;
+	IOnlineIdentityPtr _OnlineIdentity;
+	FString FriendsListName = "Default";
 
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
@@ -55,7 +59,7 @@ private:
 	void OnFindFriendSessionsComplete(int32 LocalUserNum, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& FriendSearchResult);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type EOnJoinSessionCompleteResult);
 	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
-
+	void OnReadFriendsListComplete(int32 LocalUserNum, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr);
 	void CreateSession();
-	
+	TArray<FUniqueNetIdRef> GetFriendIds(const TArray<TSharedRef<FOnlineFriend>> &FriendsList);
 };

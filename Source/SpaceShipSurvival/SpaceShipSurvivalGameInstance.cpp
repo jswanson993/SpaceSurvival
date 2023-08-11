@@ -33,6 +33,8 @@ void USpaceShipSurvivalGameInstance::Init()
 	IOnlineSubsystem* onlineSubsystem = IOnlineSubsystem::Get();
 	if (onlineSubsystem != nullptr){
 		_OnlineSession = onlineSubsystem->GetSessionInterface();
+		_OnlineFriends = onlineSubsystem->GetFriendsInterface();
+		_OnlineIdentity = onlineSubsystem->GetIdentityInterface();
 		//Bind Delegates
 		if (_OnlineSession.IsValid()) {
 			_OnlineSession->OnCreateSessionCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnCreateSessionComplete);
@@ -92,7 +94,11 @@ void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
 		SessionSearch->MaxSearchResults = 100;
 		if (_OnlineSession.IsValid()) {
 			if(FriendsOnly){
-				//_OnlineSession
+				
+				_OnlineFriends->ReadFriendsList(0, FriendsListName, FOnReadFriendsListComplete::CreateUObject(this, &USpaceShipSurvivalGameInstance::OnReadFriendsListComplete));
+				FString listName = "List Name";
+				TArray<TSharedRef<FOnlineFriend>> friendList;
+				bool success = _OnlineFriends->GetFriendsList(0, listName, friendList);
 			}
 			else {
 				UE_LOG(LogTemp, Warning, TEXT("Starting Session Search"));
@@ -229,6 +235,22 @@ void USpaceShipSurvivalGameInstance::OnNetworkFailure(UWorld* World, UNetDriver*
 	LeaveGame();
 }
 
+void USpaceShipSurvivalGameInstance::OnReadFriendsListComplete(int32 LocalUserNum, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr)
+{
+	if (bWasSuccessful && _OnlineFriends.IsValid()) {
+		TArray<TSharedRef<FOnlineFriend>> FriendsList;
+		bool success = _OnlineFriends->GetFriendsList(LocalUserNum, ListName, FriendsList);
+		if (success) {
+			TArray<FUniqueNetIdRef> friendIds = GetFriendIds(FriendsList);
+			FUniqueNetIdPtr localID = _OnlineIdentity->GetUniquePlayerId(LocalUserNum);
+			if (localID == nullptr) {
+				//localID = _OnlineIdentity->CreateUniquePlayerId(,);
+			}
+			//_OnlineSession->FindFriendSession(, friendIds);
+		}
+	}
+}
+
 void USpaceShipSurvivalGameInstance::CreateSession() {
 
 		FOnlineSessionSettings sessionSettings;
@@ -255,4 +277,14 @@ void USpaceShipSurvivalGameInstance::CreateSession() {
 		sessionSettings.Set(SERVER_NAME_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		sessionSettings.Set(PASSWORD_KEY, DesiredPassword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		_OnlineSession->CreateSession(0, NAME_GameSession, sessionSettings);
+}
+
+TArray<FUniqueNetIdRef> USpaceShipSurvivalGameInstance::GetFriendIds(const TArray<TSharedRef<FOnlineFriend>> &FriendsList)
+{
+	TArray<FUniqueNetIdRef> friendIds;
+	for (TSharedRef<FOnlineFriend> onlineFriend : FriendsList) {
+		FUniqueNetIdRef id = onlineFriend->GetUserId();
+		friendIds.Add(id);
+	}
+	return friendIds;
 }
