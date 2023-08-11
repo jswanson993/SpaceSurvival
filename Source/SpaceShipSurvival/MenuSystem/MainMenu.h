@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "MenuSystem.h"
+#include "MenuWidget.h"
 #include "MainMenu.generated.h"
 
 USTRUCT()
@@ -21,7 +22,7 @@ struct FServerDetails {
  * 
  */
 UCLASS()
-class SPACESHIPSURVIVAL_API UMainMenu : public UUserWidget
+class SPACESHIPSURVIVAL_API UMainMenu : public UMenuWidget
 {
 	GENERATED_BODY()
 
@@ -72,13 +73,7 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButton* BackButton2;
 
-	void SetMenuSystem(IMenuSystem* MenuSystem);
-	void Setup();
-	void TearDown();
-
 private:
-
-	IMenuSystem* _MenuSystem;
 
 	UFUNCTION()
 	void OnHostGameClicked();
@@ -86,8 +81,6 @@ private:
 	void OnJoinGameClicked();
 	UFUNCTION()
 	void OnOptionsClicked();
-	UFUNCTION()
-	void OnQuitClicked();
 	UFUNCTION()
 	void OnStartGameClicked();
 	UFUNCTION()

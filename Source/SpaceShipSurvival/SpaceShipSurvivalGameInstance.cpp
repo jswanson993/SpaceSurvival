@@ -3,6 +3,7 @@
 
 #include "SpaceShipSurvivalGameInstance.h"
 #include "MenuSystem/MainMenu.h"
+#include "MenuSystem/InGameMenu.h"
 #include "OnlineSessionSettings.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -16,6 +17,12 @@ USpaceShipSurvivalGameInstance::USpaceShipSurvivalGameInstance(const FObjectInit
 	static ConstructorHelpers::FClassFinder<UUserWidget> MainMenuClassFinder(TEXT("/Game/MenuSystem/WBP_MainMenu"));
 	if (MainMenuClassFinder.Class != nullptr) {
 		MainMenuClass = MainMenuClassFinder.Class;
+	}
+
+	//Find the Main Menu Widget in the content browser
+	static ConstructorHelpers::FClassFinder<UUserWidget> InGameMenuClassFinder(TEXT("/Game/MenuSystem/WBP_InGameMenu"));
+	if (InGameMenuClassFinder.Class != nullptr) {
+		InGameMenuClass = InGameMenuClassFinder.Class;
 	}
 }
 
@@ -91,6 +98,29 @@ void USpaceShipSurvivalGameInstance::LoadMenu()
 	MainMenu->SetMenuSystem(this);
 	
 	MainMenu->Setup();
+}
+
+void USpaceShipSurvivalGameInstance::LoadInGameMenu()
+{
+	if(!ensure(InGameMenuClass != nullptr)) return;
+	InGameMenu = CreateWidget<UInGameMenu>(this, InGameMenuClass);
+	if(!ensure(InGameMenu != nullptr)) return
+	InGameMenu->SetMenuSystem(this);
+
+	InGameMenu->Setup();
+	InGameMenu->SetMenuSystem(this);
+}
+
+void USpaceShipSurvivalGameInstance::LeaveGame()
+{
+	UWorld* world = GetWorld();
+	if (!ensure(world != nullptr)) return;
+
+	APlayerController* playerController = world->GetFirstPlayerController();
+	if (!ensure(playerController != nullptr)) return;
+
+	playerController->ClientTravel("/Game/MenuSystem/MainMenu", ETravelType::TRAVEL_Absolute);
+
 }
 
 void USpaceShipSurvivalGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)

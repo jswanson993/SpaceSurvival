@@ -31,9 +31,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LoadMenu();
 
+	UFUNCTION()
+	void LoadInGameMenu();
+
+	void LeaveGame();
+
 private:
 	TSubclassOf<class UUserWidget> MainMenuClass;
 	class UMainMenu* MainMenu;
+	TSubclassOf<class UUserWidget> InGameMenuClass;
+	class UInGameMenu* InGameMenu;
 	FString DesiredServerName;
 	FString DesiredPassword;
 	FString DesiredServerType;

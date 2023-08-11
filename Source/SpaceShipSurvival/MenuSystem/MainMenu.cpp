@@ -15,7 +15,7 @@
 #include "CustomButton.h"
 
 
-UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer){
+UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer){
     //Find the Main Menu Widget in the content browser
     static ConstructorHelpers::FClassFinder<UUserWidget> ServerLineClassFinder(TEXT("/Game/MenuSystem/WBP_ServerLine"));
     if (ServerLineClassFinder.Class != nullptr) {
@@ -36,7 +36,7 @@ bool UMainMenu::Initialize()
     if (!ensure(OptionsButton != nullptr)) return false;
     OptionsButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnOptionsClicked);
     if (!ensure(QuitButton != nullptr)) return false;
-    QuitButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnQuitClicked);
+    QuitButton->CustomButton->OnClicked.AddDynamic(this, &UMenuWidget::OnQuitClicked);
     if (!ensure(StartGameButton != nullptr)) return false;
     StartGameButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnStartGameClicked);
     if (!ensure(BackButton != nullptr)) return false;
@@ -92,44 +92,7 @@ void UMainMenu::UpdateSelection(int32 Index)
     }
 }
 
-void UMainMenu::SetMenuSystem(IMenuSystem* MenuSystem)
-{
-    _MenuSystem = MenuSystem;
-}
 
-void UMainMenu::Setup()
-{
-    this->AddToViewport();
-
-    UWorld* world = GetWorld();
-    if (!ensure(world != nullptr)) return;
-
-    APlayerController* playerController = world->GetFirstPlayerController();
-    if (!ensure(playerController != nullptr)) return;
-    //Set input to ui only and focus on menu
-    FInputModeUIOnly inputMode;
-    inputMode.SetWidgetToFocus(this->TakeWidget());
-    inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    playerController->SetInputMode(inputMode);
-
-    playerController->SetShowMouseCursor(true);
-}
-
-void UMainMenu::TearDown()
-{
-    UWorld* world = GetWorld();
-    if (!ensure(world != nullptr)) return;
-
-    APlayerController* playerController = world->GetFirstPlayerController();
-    if (!ensure(playerController != nullptr)) return;
-
-    playerController->SetShowMouseCursor(false);
-    //Set input back to game
-    FInputModeGameOnly inputMode;
-    playerController->SetInputMode(inputMode);
-    //Remove widget from screen
-    RemoveFromParent();
-}
 
 /*Open Server Creation Menu*/
 void UMainMenu::OnHostGameClicked()
@@ -152,17 +115,7 @@ void UMainMenu::OnOptionsClicked()
 {
     UE_LOG(LogTemp, Warning, TEXT("Clicked Options"));
 }
-/*Quit the game*/
-void UMainMenu::OnQuitClicked()
-{
-    UWorld* world = GetWorld();
-    if(!ensure(world != nullptr)) return;
 
-    APlayerController* playerController = world->GetFirstPlayerController();
-    if(!ensure(playerController != nullptr)) return;
-    playerController->ConsoleCommand("Exit");
-
-}
 /*Create new server*/
 void UMainMenu::OnStartGameClicked()
 {
