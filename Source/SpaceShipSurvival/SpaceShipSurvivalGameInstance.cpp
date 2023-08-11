@@ -185,13 +185,13 @@ void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 				if (sessionResult.Session.SessionSettings.NumPublicConnections == 0) {
 					serverDetails.ServerType = "Private";
 					serverDetails.Players = FString::Printf(TEXT("%d/%d"),
-					sessionResult.Session.NumOpenPrivateConnections,
+					sessionResult.Session.SessionSettings.NumPrivateConnections - sessionResult.Session.NumOpenPrivateConnections,
 					sessionResult.Session.SessionSettings.NumPrivateConnections);
 				}
 				else {
 					serverDetails.ServerType = "Public";
 					serverDetails.Players = FString::Printf(TEXT("%d/%d"),
-					sessionResult.Session.NumOpenPublicConnections,
+					sessionResult.Session.SessionSettings.NumPublicConnections - sessionResult.Session.NumOpenPublicConnections,
 					sessionResult.Session.SessionSettings.NumPublicConnections);
 				}
 				foundServers.Add(serverDetails);
