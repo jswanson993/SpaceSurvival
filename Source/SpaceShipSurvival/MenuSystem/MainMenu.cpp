@@ -79,6 +79,7 @@ void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
 
 void UMainMenu::UpdateSelection(int32 Index)
 {
+    SelectedIndex = Index;
     for (int32 i = 0; i < ServerList->GetChildrenCount(); i++) {
         auto line = Cast<UServerLine>(ServerList->GetChildAt(i));
         if (line != nullptr) {
@@ -140,4 +141,5 @@ void UMainMenu::OnBackClicked()
 void UMainMenu::OnJoinClicked()
 {
     UE_LOG(LogTemp, Warning, TEXT("Join Clicked"));
+    _MenuSystem->JoinGame(SelectedIndex);
 }

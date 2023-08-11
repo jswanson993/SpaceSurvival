@@ -23,7 +23,7 @@ class SPACESHIPSURVIVAL_API IMenuSystem
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual void HostGame(FString ServerName, FString Password, FString ServerType, int32 PlayerLimit) = 0;
-	virtual void JoinGame() = 0;
+	virtual void JoinGame(uint32 Index) = 0;
 	virtual void FindSessions(bool FriendsOnly) = 0;
 	virtual void LeaveGame() = 0;
 };

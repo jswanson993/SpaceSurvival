@@ -75,6 +75,10 @@ public:
 
 private:
 
+	TArray<FServerDetails> FoundServers;
+	TSubclassOf<class UUserWidget> ServerLineClass;
+	int32 SelectedIndex;
+
 	UFUNCTION()
 	void OnHostGameClicked();
 	UFUNCTION()
@@ -87,7 +91,4 @@ private:
 	void OnBackClicked();
 	UFUNCTION()
 	void OnJoinClicked();
-
-	TArray<FServerDetails> FoundServers;
-	TSubclassOf<class UUserWidget> ServerLineClass;
 };

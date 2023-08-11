@@ -6,6 +6,7 @@
 #include "MenuSystem/InGameMenu.h"
 #include "OnlineSessionSettings.h"
 #include "UObject/ConstructorHelpers.h"
+#include <Runtime/Engine/Classes/Engine/Engine.h>
 
 
 const FName SERVER_NAME_KEY = "ServerName";
@@ -38,7 +39,12 @@ void USpaceShipSurvivalGameInstance::Init()
 			_OnlineSession->OnDestroySessionCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnDestroySessionComplete);
 			_OnlineSession->OnFindSessionsCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnFindSessionsComplete);
 			_OnlineSession->OnFindFriendSessionCompleteDelegates->AddUObject(this, &USpaceShipSurvivalGameInstance::OnFindFriendSessionsComplete);
+			_OnlineSession->OnJoinSessionCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnJoinSessionComplete);
 		}
+	}
+
+	if (GEngine) {
+		GEngine->OnNetworkFailure().AddUObject(this, &USpaceShipSurvivalGameInstance::OnNetworkFailure);
 	}
 
 
@@ -65,8 +71,17 @@ void USpaceShipSurvivalGameInstance::HostGame(FString ServerName, FString Passwo
 	CreateSession();
 }
 
-void USpaceShipSurvivalGameInstance::JoinGame()
+void USpaceShipSurvivalGameInstance::JoinGame(uint32 Index)
 {
+	if(!SessionSearch.IsValid()) return;
+	if(!_OnlineSession.IsValid()) return;
+
+	if (MainMenu != nullptr) {
+		MainMenu->TearDown();
+	}
+
+	_OnlineSession->JoinSession(0, NAME_GameSession, SessionSearch->SearchResults[Index]);
+
 }
 
 void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
@@ -192,6 +207,26 @@ void USpaceShipSurvivalGameInstance::OnFindFriendSessionsComplete(int32 LocalUse
 	if (MainMenu != nullptr) {
 		MainMenu->TearDown();
 	}
+}
+
+void USpaceShipSurvivalGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type EOnJoinSessionCompleteResult)
+{
+	if (EOnJoinSessionCompleteResult == EOnJoinSessionCompleteResult::Success || EOnJoinSessionCompleteResult == EOnJoinSessionCompleteResult::AlreadyInSession) {
+		if(!_OnlineSession.IsValid()) return;
+		
+		FString ConnectInfo;
+		if(!_OnlineSession->GetResolvedConnectString(SessionName, ConnectInfo)) return;
+		
+		APlayerController* playerController = GetFirstLocalPlayerController();
+		if(!ensure(playerController != nullptr)) return;
+		playerController->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute, true);
+	}
+
+}
+
+void USpaceShipSurvivalGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	LeaveGame();
 }
 
 void USpaceShipSurvivalGameInstance::CreateSession() {

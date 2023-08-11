@@ -24,7 +24,7 @@ public:
 
 	void HostGame(FString ServerName, FString Password, FString ServerType, int32 PlayerLimit) override;
 
-	void JoinGame() override;
+	void JoinGame(uint32 Index) override;
 
 	void FindSessions(bool FriendsOnly) override;
 
@@ -53,6 +53,8 @@ private:
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);
 	void OnFindFriendSessionsComplete(int32 LocalUserNum, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& FriendSearchResult);
+	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type EOnJoinSessionCompleteResult);
+	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 
 	void CreateSession();
 	
