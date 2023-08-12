@@ -72,6 +72,16 @@ public:
 	class UCustomButton* JoinButton;
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButton* BackButton2;
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* SearchingText;
+	UPROPERTY(meta = (BindWidget))
+	class UOverlay* PasswordOverlay;
+	UPROPERTY(meta = (BindWidget))
+	class UEditableTextBox* AuthorizationTextbox;
+	UPROPERTY(meta = (BindWidget))
+	class UCustomButton* ConfirmButton;
+	UPROPERTY(meta = (BindWidget))
+	class UCustomButton* CancelButton;
 
 private:
 
@@ -91,4 +101,8 @@ private:
 	void OnBackClicked();
 	UFUNCTION()
 	void OnJoinClicked();
+	UFUNCTION()
+	void OnConfirmClicked();
+	UFUNCTION()
+	void OnCancelClicked();
 };

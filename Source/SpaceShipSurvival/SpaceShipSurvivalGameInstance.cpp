@@ -11,6 +11,7 @@
 
 const FName SERVER_NAME_KEY = "ServerName";
 const FName PASSWORD_KEY = "Passowrd";
+const FName SERVER_TYPE_KEY = "ServerType";
 
 USpaceShipSurvivalGameInstance::USpaceShipSurvivalGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -32,6 +33,7 @@ void USpaceShipSurvivalGameInstance::Init()
 	Super::Init();
 	IOnlineSubsystem* onlineSubsystem = IOnlineSubsystem::Get();
 	if (onlineSubsystem != nullptr){
+		UE_LOG(LogTemp, Warning, TEXT("Found Subsystem: %s"), *onlineSubsystem->GetSubsystemName().ToString());
 		_OnlineSession = onlineSubsystem->GetSessionInterface();
 		_OnlineFriends = onlineSubsystem->GetFriendsInterface();
 		_OnlineIdentity = onlineSubsystem->GetIdentityInterface();
@@ -93,8 +95,7 @@ void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
 		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		SessionSearch->MaxSearchResults = 100;
 		if (_OnlineSession.IsValid()) {
-			if(FriendsOnly){
-				
+			if(FriendsOnly){				
 				_OnlineFriends->ReadFriendsList(0, FriendsListName, FOnReadFriendsListComplete::CreateUObject(this, &USpaceShipSurvivalGameInstance::OnReadFriendsListComplete));
 				FString listName = "List Name";
 				TArray<TSharedRef<FOnlineFriend>> friendList;
@@ -153,7 +154,7 @@ void USpaceShipSurvivalGameInstance::OnCreateSessionComplete(FName SessionName, 
 		world->ServerTravel("/Game/FirstPerson/Maps/FirstPersonMap?listen");
 	}
 	else if (!bWasSuccessful) {
-		UE_LOG(LogTemp, Warning, TEXT("Could not create Sesion"));
+		UE_LOG(LogTemp, Warning, TEXT("Could not create Session"));
 	}
 }
 
@@ -175,31 +176,35 @@ void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 				FServerDetails serverDetails;
 				FString serverName;
 				FString serverPassword;
-				if (sessionResult.Session.SessionSettings.Get("ServerName", serverName)) {
+				FString serverType;
+				if (sessionResult.Session.SessionSettings.Get(SERVER_NAME_KEY, serverName)) {
 					serverDetails.ServerName = serverName;
+					UE_LOG(LogTemp, Warning, TEXT("Found Server: %s"), *serverName);
 				}
 				else {
 					serverDetails.ServerName = "Unknown";
 				}
 
-				if (sessionResult.Session.SessionSettings.Get("ServerPassword", serverPassword)) {
+				if (sessionResult.Session.SessionSettings.Get(PASSWORD_KEY, serverPassword)) {
 					serverDetails.ServerPassword = serverPassword;
+					UE_LOG(LogTemp, Warning, TEXT("Found Password: %s"), *serverPassword);
 				}
 				else {
-					serverDetails.ServerPassword = "Unknown";
+					serverDetails.ServerPassword = "";
 				}
-				if (sessionResult.Session.SessionSettings.NumPublicConnections == 0) {
-					serverDetails.ServerType = "Private";
-					serverDetails.Players = FString::Printf(TEXT("%d/%d"),
-					sessionResult.Session.SessionSettings.NumPrivateConnections - sessionResult.Session.NumOpenPrivateConnections,
-					sessionResult.Session.SessionSettings.NumPrivateConnections);
-				}
-				else {
-					serverDetails.ServerType = "Public";
+				if (sessionResult.Session.SessionSettings.Get(SERVER_NAME_KEY, serverType)) {
+					if(!serverType.Equals("Public")){
+						serverDetails.ServerType = "Private";
+					}else{
+						serverDetails.ServerType = "Public";
+					}
 					serverDetails.Players = FString::Printf(TEXT("%d/%d"),
 					sessionResult.Session.SessionSettings.NumPublicConnections - sessionResult.Session.NumOpenPublicConnections,
 					sessionResult.Session.SessionSettings.NumPublicConnections);
 				}
+
+
+
 				foundServers.Add(serverDetails);
 			}
 		}
@@ -262,20 +267,18 @@ void USpaceShipSurvivalGameInstance::CreateSession() {
 		sessionSettings.bShouldAdvertise = true;
 		sessionSettings.bUsesPresence = true;
 
-		if (DesiredServerType.Equals("Public")) {
+		if (DesiredServerType.Equals("Friends Only")) {
+			sessionSettings.bAllowJoinViaPresenceFriendsOnly = true;
+		}
+		else {
 			sessionSettings.NumPublicConnections = DesiredPlayerLimit;
 			sessionSettings.NumPrivateConnections = 0;
 		}
-		else {
-			sessionSettings.NumPrivateConnections = DesiredPlayerLimit;
-			sessionSettings.NumPublicConnections = 0;
-			if (DesiredServerType.Equals("Friends Only")) {
-				sessionSettings.bAllowJoinViaPresenceFriendsOnly = true;
-			}
-		}
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *DesiredPassword)
+
+		UE_LOG(LogTemp, Warning, TEXT("Setting Desired Password to %s"), *DesiredPassword)
 		sessionSettings.Set(SERVER_NAME_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		sessionSettings.Set(PASSWORD_KEY, DesiredPassword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		sessionSettings.Set(SERVER_TYPE_KEY, DesiredServerType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		_OnlineSession->CreateSession(0, NAME_GameSession, sessionSettings);
 }
 

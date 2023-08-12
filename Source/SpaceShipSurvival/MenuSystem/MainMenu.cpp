@@ -9,6 +9,7 @@
 #include "Components/Slider.h"
 #include "Components/Scrollbox.h"
 #include "Components/TextBlock.h"
+#include "Components/Overlay.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "ServerLine.h"
@@ -45,12 +46,17 @@ bool UMainMenu::Initialize()
     JoinButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnJoinClicked);
     if (!ensure(BackButton2 != nullptr)) return false;
     BackButton2->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
+    if(!ensure(ConfirmButton != nullptr)) return false;
+    ConfirmButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnConfirmClicked);
+    if(!ensure(CancelButton != nullptr)) return false;
+    CancelButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancelClicked);
 
     return true;
 }
 
 void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
 {
+    SearchingText->SetVisibility(ESlateVisibility::Hidden);
     ServerList->ClearChildren();
     UWorld* world = GetWorld();
     FoundServers = Servers;
@@ -64,9 +70,10 @@ void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
             serverLine->ServerNameText->SetText(FText::FromString(server.ServerName));
             serverLine->ServerTypeText->SetText(FText::FromString(server.ServerType));
             serverLine->PlayersText->SetText(FText::FromString(server.Players));
-            if (server.ServerType == "Private") {
+            if (server.ServerType.Equals("Private")) {
                 serverLine->bRequiresPassword = true;
                 serverLine->Password = server.ServerPassword;
+                UE_LOG(LogTemp, Warning, TEXT("Server Line Password Set to: %s"), *serverLine->Password);
             }
             serverLine->Setup(this, index);
             //Add to Server List
@@ -125,6 +132,7 @@ void UMainMenu::OnStartGameClicked()
         //Get server setup details
         FString serverName = ServerNameTextBox->GetText().ToString();
         FString serverPassword = PasswordTextBox->GetText().ToString();
+        UE_LOG(LogTemp, Warning, TEXT("Server Password Set to: %s"), *serverPassword);
         FString serverType = ServerTypeDropdown->GetSelectedOption();
         int32 playerLimit = PlayerLimitSlider->GetValue();
         _MenuSystem->HostGame(serverName, serverPassword, serverType, playerLimit);
@@ -134,6 +142,7 @@ void UMainMenu::OnStartGameClicked()
 void UMainMenu::OnBackClicked()
 {
     if (MenuSwitcher != nullptr && MainMenu != nullptr) {
+        SearchingText->SetVisibility(ESlateVisibility::Visible);
         MenuSwitcher->SetActiveWidget(MainMenu);
     }
 }
@@ -141,5 +150,34 @@ void UMainMenu::OnBackClicked()
 void UMainMenu::OnJoinClicked()
 {
     UE_LOG(LogTemp, Warning, TEXT("Join Clicked"));
-    _MenuSystem->JoinGame(SelectedIndex);
+   
+    if (!ensure(ServerList != nullptr)) return;
+    auto serverLine =  Cast<UServerLine>(ServerList->GetChildAt(SelectedIndex));
+    if (serverLine != nullptr) {
+        if (serverLine->bRequiresPassword == true && !serverLine->Password.IsEmpty()) {
+            if(!ensure(PasswordOverlay != nullptr)) return;
+            PasswordOverlay->SetVisibility(ESlateVisibility::Visible);
+        }else{
+            _MenuSystem->JoinGame(SelectedIndex);
+        }
+    }
+}
+
+void UMainMenu::OnConfirmClicked()
+{
+    if(!ensure(AuthorizationTextbox != nullptr)) return;
+    if(!ensure(ServerList != nullptr)) return;
+    auto serverLine = Cast<UServerLine>(ServerList->GetChildAt(SelectedIndex));
+    if(serverLine != nullptr){
+        if(AuthorizationTextbox->GetText().ToString().Equals(serverLine->Password)){
+            _MenuSystem->JoinGame(SelectedIndex);
+        }
+    }
+}
+
+void UMainMenu::OnCancelClicked()
+{
+    if (PasswordOverlay != nullptr) {
+        PasswordOverlay->SetVisibility(ESlateVisibility::Hidden);
+   }
 }
