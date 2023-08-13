@@ -3,8 +3,11 @@
 
 #include "InGameMenu.h"
 #include "Components/Button.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/Overlay.h"
 
 #include "CustomButton.h"
+#include "SettingsMenu.h"
 
 bool UInGameMenu::Initialize()
 {
@@ -19,12 +22,17 @@ bool UInGameMenu::Initialize()
 	QuitToMenuButton->CustomButton->OnClicked.AddDynamic(this, &UInGameMenu::OnClickQuitToMenu);
 	if (!ensure(QuitToDesktopButton != nullptr)) return false;
 	QuitToDesktopButton->CustomButton->OnClicked.AddDynamic(this, &UMenuWidget::OnQuitClicked);
+	if(!ensure(SettingsMenu != nullptr)) return false;
+	SettingsMenu->BackButton->OnClicked.AddDynamic(this, &UInGameMenu::OnBackClicked);
 	return true;
 }
 
 void UInGameMenu::OnClickSettings()
 {
-	return;
+	if(!ensure(MenuSwitcher != nullptr)) return;
+	if(!ensure(SettingsMenu != nullptr)) return;
+
+	MenuSwitcher->SetActiveWidget(SettingsMenu);
 }
 
 void UInGameMenu::OnClickQuitToMenu()
@@ -33,4 +41,13 @@ void UInGameMenu::OnClickQuitToMenu()
 		TearDown();
 		_MenuSystem->LeaveGame();
 	}
+}
+
+void UInGameMenu::OnBackClicked()
+{
+	if(!ensure(MenuSwitcher != nullptr)) return;
+	if(!ensure(InGameMenu != nullptr)) return;
+
+	MenuSwitcher->SetActiveWidget(InGameMenu);
+
 }

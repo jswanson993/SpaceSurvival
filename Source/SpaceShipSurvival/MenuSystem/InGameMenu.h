@@ -24,6 +24,12 @@ public:
 	class UCustomButton* QuitToMenuButton;
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButton* QuitToDesktopButton;
+	UPROPERTY(meta = (BindWidget))
+	class UWidgetSwitcher* MenuSwitcher;
+	UPROPERTY(meta = (BindWidget))
+	class USettingsMenu* SettingsMenu;
+	UPROPERTY(meta = (BindWidget))
+	class UOverlay* InGameMenu;
 
 	bool Initialize();
 
@@ -32,5 +38,7 @@ private:
 	void OnClickSettings();
 	UFUNCTION()
 	void OnClickQuitToMenu();
+	UFUNCTION()
+	void OnBackClicked();
 
 };
