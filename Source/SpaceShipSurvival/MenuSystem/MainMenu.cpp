@@ -14,6 +14,7 @@
 
 #include "ServerLine.h"
 #include "CustomButton.h"
+#include "SettingsMenu.h"
 
 
 UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer){
@@ -122,6 +123,7 @@ void UMainMenu::OnJoinGameClicked()
 void UMainMenu::OnOptionsClicked()
 {
     UE_LOG(LogTemp, Warning, TEXT("Clicked Options"));
+    MenuSwitcher->SetActiveWidget(SettingsMenu);
 }
 
 /*Create new server*/

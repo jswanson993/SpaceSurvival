@@ -82,6 +82,8 @@ public:
 	class UCustomButton* ConfirmButton;
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButton* CancelButton;
+	UPROPERTY(meta = (BindWidget))
+	class USettingsMenu* SettingsMenu;
 
 private:
 
