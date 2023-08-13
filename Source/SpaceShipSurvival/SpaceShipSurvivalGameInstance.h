@@ -9,6 +9,7 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include <Interfaces/OnlineFriendsInterface.h>
 #include "Interfaces/OnlineIdentityInterface.h"
+#include "Interfaces/OnlineUserInterface.h"
 #include "SpaceShipSurvivalGameInstance.generated.h"
 
 /**
@@ -51,8 +52,8 @@ private:
 	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
 	IOnlineFriendsPtr _OnlineFriends;
 	IOnlineIdentityPtr _OnlineIdentity;
+	IOnlineUserPtr _OnlineUser;
 	FString FriendsListName = "Default";
-
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);

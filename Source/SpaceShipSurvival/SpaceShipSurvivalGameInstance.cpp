@@ -37,6 +37,7 @@ void USpaceShipSurvivalGameInstance::Init()
 		_OnlineSession = onlineSubsystem->GetSessionInterface();
 		_OnlineFriends = onlineSubsystem->GetFriendsInterface();
 		_OnlineIdentity = onlineSubsystem->GetIdentityInterface();
+		_OnlineUser = onlineSubsystem->GetUserInterface();
 		//Bind Delegates
 		if (_OnlineSession.IsValid()) {
 			_OnlineSession->OnCreateSessionCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnCreateSessionComplete);
@@ -90,6 +91,7 @@ void USpaceShipSurvivalGameInstance::JoinGame(uint32 Index)
 
 void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
 {
+	FriendsOnly = true; //TODO: Remove after testing
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
 	if(SessionSearch.IsValid()){
 		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
@@ -97,9 +99,9 @@ void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
 		if (_OnlineSession.IsValid()) {
 			if(FriendsOnly){				
 				_OnlineFriends->ReadFriendsList(0, FriendsListName, FOnReadFriendsListComplete::CreateUObject(this, &USpaceShipSurvivalGameInstance::OnReadFriendsListComplete));
-				FString listName = "List Name";
-				TArray<TSharedRef<FOnlineFriend>> friendList;
-				bool success = _OnlineFriends->GetFriendsList(0, listName, friendList);
+				//FString listName = "List Name";
+				//TArray<TSharedRef<FOnlineFriend>> friendList;
+				//bool success = _OnlineFriends->GetFriendsList(0, listName, friendList);
 			}
 			else {
 				UE_LOG(LogTemp, Warning, TEXT("Starting Session Search"));
@@ -215,8 +217,12 @@ void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 
 void USpaceShipSurvivalGameInstance::OnFindFriendSessionsComplete(int32 LocalUserNum, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& FriendSearchResult)
 {
-	if (MainMenu != nullptr) {
+	if (MainMenu != nullptr && bWasSuccessful) {
 		MainMenu->TearDown();
+
+		for (auto friendSearchResult : FriendSearchResult) {
+			UE_LOG(LogTemp, Warning, TEXT("Found Server Made By: %s"), *friendSearchResult.Session.OwningUserName);
+		}
 	}
 }
 
@@ -247,11 +253,12 @@ void USpaceShipSurvivalGameInstance::OnReadFriendsListComplete(int32 LocalUserNu
 		bool success = _OnlineFriends->GetFriendsList(LocalUserNum, ListName, FriendsList);
 		if (success) {
 			TArray<FUniqueNetIdRef> friendIds = GetFriendIds(FriendsList);
-			FUniqueNetIdPtr localID = _OnlineIdentity->GetUniquePlayerId(LocalUserNum);
-			if (localID == nullptr) {
-				//localID = _OnlineIdentity->CreateUniquePlayerId(,);
+
+			FUniqueNetIdPtr netID = _OnlineIdentity->GetUniquePlayerId(LocalUserNum);
+
+			if(netID != nullptr){
+				_OnlineSession->FindFriendSession(*netID, friendIds);
 			}
-			//_OnlineSession->FindFriendSession(, friendIds);
 		}
 	}
 }
