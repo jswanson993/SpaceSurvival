@@ -22,14 +22,37 @@ bool USettingsMenu::Initialize()
 
 void USettingsMenu::NativeOnInitialized()
 {
-	UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
-	if (GEngine != nullptr) {
-		CurrentResolution = GEngine->GameViewport->Viewport->GetSizeXY();
-		UE_LOG(LogTemp, Warning, TEXT("Current Resolution: %s"), *CurrentResolution.ToString())
+	SetupResolution();
+	SetupFullscreen();
+}
+
+void USettingsMenu::OnApplyClicked()
+{
+	FString fullscreenMode = FullscreenComboBox->GetSelectedOption();
+	FString resolutionStr = ResolutionComboBox->GetSelectedOption();
+	UGameUserSettings* userSettings = GEngine->GetGameUserSettings();
+	if (fullscreenMode.Equals("Fullscreen")) {
+		userSettings->SetFullscreenMode(EWindowMode::Fullscreen);
+	}
+	else if (fullscreenMode.Equals("Windowed Fullscreen")) {
+		userSettings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
 	}
 	else {
-		UE_LOG(LogTemp, Warning, TEXT("Could not access GEngine"));
+		userSettings->SetFullscreenMode(EWindowMode::Windowed);
 	}
+	if(!fullscreenMode.Equals("Windowed")){
+		FIntPoint* newRes = ResolutionMapping.Find(resolutionStr);
+		if(newRes != nullptr){
+			userSettings->SetScreenResolution(*newRes);
+		}
+	}
+	userSettings->ApplySettings(false);
+}
+
+void USettingsMenu::SetupResolution()
+{
+	UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
+	FVector2D currentResolution;
 
 	if (!ensure(ResolutionComboBox != nullptr)) return;
 	for (auto resolution : Resolutions) {
@@ -37,14 +60,22 @@ void USettingsMenu::NativeOnInitialized()
 		ResolutionComboBox->AddOption(res);
 		ResolutionMapping.Add(res, resolution);
 	}
-
-	if(ResolutionMapping.FindKey(CurrentResolution) != nullptr){
-		FString currentRes = *ResolutionMapping.FindKey(CurrentResolution);
-		ResolutionComboBox->SetSelectedOption(currentRes);
-	}
+	UE_LOG(LogTemp, Warning, TEXT("Current resolution: %d / %d"), GSystemResolution.ResX, GSystemResolution.ResY);
+	FString currentRes = FString::Printf(TEXT("%d / %d"), GSystemResolution.ResX, GSystemResolution.ResY);
+	ResolutionComboBox->SetSelectedOption(currentRes);
 }
 
-void USettingsMenu::OnApplyClicked()
+void USettingsMenu::SetupFullscreen()
 {
-	return;
+	EWindowMode::Type fullscreenMode = GEngine->GetGameUserSettings()->GetFullscreenMode();
+	switch (fullscreenMode) {
+		case EWindowMode::Fullscreen : FullscreenComboBox->SetSelectedOption("Fullscreen");
+			break;
+		case EWindowMode::WindowedFullscreen : FullscreenComboBox->SetSelectedOption("Windowed Fullscreen");
+			break;
+		case EWindowMode::Windowed : FullscreenComboBox->SetSelectedOption("Windowed");
+			break;
+		default:
+			break;
+	}
 }

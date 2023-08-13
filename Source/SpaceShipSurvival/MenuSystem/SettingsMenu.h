@@ -32,9 +32,10 @@ private:
 	UFUNCTION()
 	void OnApplyClicked();
 
+	void SetupResolution();
+	void SetupFullscreen();
+
 	TArray<FIntPoint> Resolutions;
 	TMap<FString, FIntPoint> ResolutionMapping;
-	FIntPoint CurrentResolution;
-
 	FViewport* ViewPort;
 };

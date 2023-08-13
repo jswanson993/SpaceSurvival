@@ -51,6 +51,8 @@ bool UMainMenu::Initialize()
     ConfirmButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnConfirmClicked);
     if(!ensure(CancelButton != nullptr)) return false;
     CancelButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancelClicked);
+    if(!ensure(SettingsMenu != nullptr)) return false;
+    SettingsMenu->BackButton->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
 
     return true;
 }
