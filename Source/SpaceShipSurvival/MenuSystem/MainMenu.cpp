@@ -10,6 +10,7 @@
 #include "Components/Scrollbox.h"
 #include "Components/TextBlock.h"
 #include "Components/Overlay.h"
+#include "Components/CheckBox.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "ServerLine.h"
@@ -53,6 +54,8 @@ bool UMainMenu::Initialize()
     CancelButton->CustomButton->OnClicked.AddDynamic(this, &UMainMenu::OnCancelClicked);
     if(!ensure(SettingsMenu != nullptr)) return false;
     SettingsMenu->BackButton->OnClicked.AddDynamic(this, &UMainMenu::OnBackClicked);
+    if(!ensure(FriendsOnlyCheckBox != nullptr)) return false;
+    FriendsOnlyCheckBox->OnCheckStateChanged.AddDynamic(this, &UMainMenu::OnCheckBoxChanged);
 
     return true;
 }
@@ -73,6 +76,7 @@ void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
             serverLine->ServerNameText->SetText(FText::FromString(server.ServerName));
             serverLine->ServerTypeText->SetText(FText::FromString(server.ServerType));
             serverLine->PlayersText->SetText(FText::FromString(server.Players));
+            serverLine->ServerOwnerText->SetText(FText::FromString(server.OwningUser));
             if (server.ServerType.Equals("Private")) {
                 serverLine->bRequiresPassword = true;
                 serverLine->Password = server.ServerPassword;
@@ -190,4 +194,15 @@ void UMainMenu::OnCancelClicked()
     if (PasswordOverlay != nullptr) {
         PasswordOverlay->SetVisibility(ESlateVisibility::Hidden);
    }
+}
+
+void UMainMenu::OnCheckBoxChanged(bool bIsChecked)
+{
+    if(!ensure(ServerList != nullptr)) return;
+    if(!ensure(SearchingText != nullptr)) return;
+    if(!ensure(_MenuSystem != nullptr)) return;
+    ServerList->ClearChildren();
+    SearchingText->SetVisibility(ESlateVisibility::Visible);
+ 
+    _MenuSystem->FindSessions(bIsChecked);
 }

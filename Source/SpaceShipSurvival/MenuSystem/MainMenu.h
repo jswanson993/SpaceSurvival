@@ -39,6 +39,7 @@ public:
 	//Menu Components
 	UPROPERTY(meta = (BindWidget))
 	class UWidgetSwitcher* MenuSwitcher;
+	
 	//Main Menu Components
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* MainMenu;
@@ -50,6 +51,7 @@ public:
 	class UCustomButton* OptionsButton;
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButton* QuitButton;
+	
 	//Host Menu Components
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* HostMenu;
@@ -65,6 +67,7 @@ public:
 	class UCustomButton* StartGameButton;
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButton* BackButton;
+	
 	//Join Menu Components
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* JoinMenu;
@@ -84,6 +87,10 @@ public:
 	class UCustomButton* ConfirmButton;
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButton* CancelButton;
+	UPROPERTY(meta = (BindWidget))
+	class UCheckBox* FriendsOnlyCheckBox;
+	
+	//Settings Menu Components
 	UPROPERTY(meta = (BindWidget))
 	class USettingsMenu* SettingsMenu;
 
@@ -109,4 +116,6 @@ private:
 	void OnConfirmClicked();
 	UFUNCTION()
 	void OnCancelClicked();
+	UFUNCTION()
+	void OnCheckBoxChanged(bool bIsChecked);
 };

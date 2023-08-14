@@ -100,15 +100,13 @@ void USpaceShipSurvivalGameInstance::JoinGame(uint32 Index)
 
 void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
 {
-	//FriendsOnly = true; //TODO: Remove after testing
-
 	if (_OnlineSession.IsValid()) {
 		if(FriendsOnly){				
 			_OnlineFriends->ReadFriendsList(0, FriendsListName, FOnReadFriendsListComplete::CreateUObject(this, &USpaceShipSurvivalGameInstance::OnReadFriendsListComplete));
 		}
 		else {
 			SessionSearch = MakeShareable(new FOnlineSessionSearch());
-			//SessionSearch
+
 			if (SessionSearch.IsValid()) {
 				SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 				SessionSearch->MaxSearchResults = 100;
@@ -190,6 +188,7 @@ void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 				FString serverName;
 				FString serverPassword;
 				FString serverType;
+				serverDetails.OwningUser = sessionResult.Session.OwningUserName;
 				if (sessionResult.Session.SessionSettings.Get(SERVER_NAME_KEY, serverName)) {
 					serverDetails.ServerName = serverName;
 					UE_LOG(LogTemp, Warning, TEXT("Found Server: %s"), *serverName);
@@ -206,16 +205,18 @@ void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 					serverDetails.ServerPassword = "";
 				}
 				if (sessionResult.Session.SessionSettings.Get(SERVER_NAME_KEY, serverType)) {
-					if(!serverType.Equals("Public")){
+					if(serverType.ToUpper().Equals("PIVATE")) {
 						serverDetails.ServerType = "Private";
 						serverDetails.Players = FString::Printf(TEXT("%d/%d"), sessionResult.Session.SessionSettings.NumPrivateConnections - sessionResult.Session.NumOpenPrivateConnections,
 							sessionResult.Session.SessionSettings.NumPublicConnections);
-					}else{
+					}else if(serverType.ToUpper().Equals("PUBLIC")) {
 						serverDetails.ServerType = "Public";
 						serverDetails.Players = FString::Printf(TEXT("%d/%d"), sessionResult.Session.SessionSettings.NumPrivateConnections - sessionResult.Session.NumOpenPrivateConnections,
 							sessionResult.Session.SessionSettings.NumPrivateConnections);
 					}
-					
+					else{
+						continue;
+					}
 				}
 
 
@@ -314,7 +315,7 @@ void USpaceShipSurvivalGameInstance::CreateSession() {
 			sessionSettings.NumPublicConnections = DesiredPlayerLimit;
 			sessionSettings.NumPrivateConnections = 0;
 		}
-
+		UE_LOG(LogTemp, Warning, TEXT("Desired Server Type: "), *DesiredServerType);
 		UE_LOG(LogTemp, Warning, TEXT("Setting Desired Password to %s"), *DesiredPassword)
 		sessionSettings.Set(SERVER_NAME_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		sessionSettings.Set(PASSWORD_KEY, DesiredPassword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);

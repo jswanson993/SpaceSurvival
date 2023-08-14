@@ -23,6 +23,8 @@ public:
 	class UTextBlock* ServerTypeText;
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* PlayersText;
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* ServerOwnerText;
 	
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsSelected = false;
