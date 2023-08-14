@@ -90,6 +90,7 @@ void UMainMenu::SetServerList(TArray<FServerDetails> Servers)
 void UMainMenu::UpdateSelection(int32 Index)
 {
     SelectedIndex = Index;
+    UE_LOG(LogTemp, Warning, TEXT("Selected Index: %d"), Index);
     for (int32 i = 0; i < ServerList->GetChildrenCount(); i++) {
         auto line = Cast<UServerLine>(ServerList->GetChildAt(i));
         if (line != nullptr) {
@@ -101,6 +102,11 @@ void UMainMenu::UpdateSelection(int32 Index)
             }
         }
     }
+}
+
+void UMainMenu::ClearServerList()
+{
+    ServerList->ClearChildren();
 }
 
 

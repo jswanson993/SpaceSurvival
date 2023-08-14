@@ -5,11 +5,14 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "MenuSystem/MenuSystem.h"
+#include "MenuSystem/MainMenu.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include <Interfaces/OnlineFriendsInterface.h>
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "Interfaces/OnlineUserInterface.h"
+#include "OnlineSessionSettings.h"
+#include "OnlineSubsystemSteam.h"
 #include "SpaceShipSurvivalGameInstance.generated.h"
 
 /**
@@ -54,13 +57,19 @@ private:
 	IOnlineIdentityPtr _OnlineIdentity;
 	IOnlineUserPtr _OnlineUser;
 	FString FriendsListName = "Default";
+	TArray<TSharedRef<class FOnlineFriend>> FriendsList;
+	int32 FriendsListSearchIndex = 0;
+	TArray<struct FServerDetails> FriendServers;
+	TArray<class FOnlineSessionSearchResult> FriendSearchResults;
+
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);
-	void OnFindFriendSessionsComplete(int32 LocalUserNum, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& FriendSearchResult);
+	void OnFindFriendSessionComplete(int32 LocalUserNum, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& FriendSearchResult);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type EOnJoinSessionCompleteResult);
 	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 	void OnReadFriendsListComplete(int32 LocalUserNum, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr);
 	void CreateSession();
-	TArray<FUniqueNetIdRef> GetFriendIds(const TArray<TSharedRef<FOnlineFriend>> &FriendsList);
+	void SendFriendServersToMenu();
 };

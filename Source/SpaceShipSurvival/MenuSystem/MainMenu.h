@@ -12,6 +12,7 @@ USTRUCT()
 struct FServerDetails {
 	GENERATED_BODY()
 
+	FString OwningUser;
 	FString ServerName;
 	FString ServerPassword;
 	FString ServerType;
@@ -32,6 +33,7 @@ public:
 
 	void SetServerList(TArray<FServerDetails> Servers);
 	void UpdateSelection(int32 Index);
+	void ClearServerList();
 
 public:
 	//Menu Components
