@@ -41,13 +41,19 @@ public:
 	/** Sets default values for this component's properties */
 	UTP_WeaponComponent();
 
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category="Weapon")
+	void Server_AttachWeapon(ASpaceShipSurvivalCharacter* TargetCharacter);
+
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void AttachWeapon(ASpaceShipSurvivalCharacter* TargetCharacter);
+	bool AttachWeapon(ASpaceShipSurvivalCharacter* TargetCharacter);
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void Fire();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Fire();
 
 protected:
 	/** Ends gameplay for this component. */
@@ -57,4 +63,9 @@ protected:
 private:
 	/** The Character holding this weapon*/
 	ASpaceShipSurvivalCharacter* Character;
+
+	void PlayFireAnimation();
+	void SpawnProjectile();
+
+	bool bInputFire = false;
 };

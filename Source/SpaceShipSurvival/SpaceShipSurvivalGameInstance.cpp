@@ -6,11 +6,13 @@
 
 #include "UObject/ConstructorHelpers.h"
 #include <Runtime/Engine/Classes/Engine/Engine.h>
+#include "Online/OnlineSessionNames.h"
 
 
 const FName SERVER_NAME_KEY = "ServerName";
-const FName PASSWORD_KEY = "Passowrd";
+const FName PASSWORD_KEY = "Password";
 const FName SERVER_TYPE_KEY = "ServerType";
+const FName NUM_PLAYERS_KEY = "NumPlayers";
 
 USpaceShipSurvivalGameInstance::USpaceShipSurvivalGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -45,6 +47,10 @@ void USpaceShipSurvivalGameInstance::Init()
 			_OnlineSession->OnFindSessionsCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnFindSessionsComplete);
 			_OnlineSession->OnFindFriendSessionCompleteDelegates->AddUObject(this, &USpaceShipSurvivalGameInstance::OnFindFriendSessionComplete);
 			_OnlineSession->OnJoinSessionCompleteDelegates.AddUObject(this, &USpaceShipSurvivalGameInstance::OnJoinSessionComplete);
+		}
+
+		if (_OnlineFriends.IsValid()) {
+			_OnlineFriends->ReadFriendsList(0, FriendsListName, FOnReadFriendsListComplete::CreateUObject(this, &USpaceShipSurvivalGameInstance::OnReadFriendsListComplete));
 		}
 	}
 
@@ -102,7 +108,7 @@ void USpaceShipSurvivalGameInstance::FindSessions(bool FriendsOnly)
 {
 	if (_OnlineSession.IsValid()) {
 		if(FriendsOnly){				
-			_OnlineFriends->ReadFriendsList(0, FriendsListName, FOnReadFriendsListComplete::CreateUObject(this, &USpaceShipSurvivalGameInstance::OnReadFriendsListComplete));
+			FindFriendSessions();
 		}
 		else {
 			SessionSearch = MakeShareable(new FOnlineSessionSearch());
@@ -147,6 +153,7 @@ void USpaceShipSurvivalGameInstance::LeaveGame()
 	if (!ensure(playerController != nullptr)) return;
 
 	playerController->ClientTravel("/Game/MenuSystem/MainMenu", ETravelType::TRAVEL_Absolute);
+	_OnlineSession->DestroySession(NAME_GameSession);
 
 }
 
@@ -154,6 +161,7 @@ void USpaceShipSurvivalGameInstance::OnCreateSessionComplete(FName SessionName, 
 {
 	if(MainMenu != nullptr && bWasSuccessful && _OnlineSession != nullptr){
 		MainMenu->TearDown();
+		FOnlineSessionSettings sessionSettings;
 		_OnlineSession->StartSession(SessionName);
 	}
 	else if (!bWasSuccessful) {
@@ -163,10 +171,7 @@ void USpaceShipSurvivalGameInstance::OnCreateSessionComplete(FName SessionName, 
 
 void USpaceShipSurvivalGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	//Recreate the session after its been destroyed
-	if (bWasSuccessful) {
-		CreateSession();
-	}
+	return;
 }
 
 void USpaceShipSurvivalGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -204,8 +209,9 @@ void USpaceShipSurvivalGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 				else {
 					serverDetails.ServerPassword = "";
 				}
-				if (sessionResult.Session.SessionSettings.Get(SERVER_NAME_KEY, serverType)) {
-					if(serverType.ToUpper().Equals("PIVATE")) {
+				if (sessionResult.Session.SessionSettings.Get(SERVER_TYPE_KEY, serverType)) {
+					UE_LOG(LogTemp, Warning, TEXT("Server Type: %s"), *serverType);
+					if(serverType.ToUpper().Equals("PRIVATE")) {
 						serverDetails.ServerType = "Private";
 						serverDetails.Players = FString::Printf(TEXT("%d/%d"), sessionResult.Session.SessionSettings.NumPrivateConnections - sessionResult.Session.NumOpenPrivateConnections,
 							sessionResult.Session.SessionSettings.NumPublicConnections);
@@ -244,7 +250,16 @@ void USpaceShipSurvivalGameInstance::OnFindFriendSessionComplete(int32 LocalUser
 			else {
 				serverDetails.ServerName = "Unknown";
 			}
+			FString serverType;
+			if (friendSearchResult.Session.SessionSettings.Get(SERVER_TYPE_KEY, serverType)) {
+				serverDetails.ServerType = serverType;
+			}
+			else {
+				serverDetails.ServerType = "Unknown";
+			}
+
 			serverDetails.ServerPassword = "";
+		
 			serverDetails.Players = FString::Printf(TEXT("%d/%d"), (friendSearchResult.Session.SessionSettings.NumPrivateConnections - friendSearchResult.Session.NumOpenPrivateConnections), (friendSearchResult.Session.SessionSettings.NumPrivateConnections));
 
 			FriendServers.Add(serverDetails);
@@ -285,14 +300,7 @@ void USpaceShipSurvivalGameInstance::OnNetworkFailure(UWorld* World, UNetDriver*
 void USpaceShipSurvivalGameInstance::OnReadFriendsListComplete(int32 LocalUserNum, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr)
 {
 	if (bWasSuccessful && _OnlineFriends.IsValid()) {
-		bool success = _OnlineFriends->GetFriendsList(LocalUserNum, ListName, FriendsList);
-		if (success) {
-			UE_LOG(LogTemp, Warning, TEXT("Found %d Friends"), FriendsList.Num());
-			MainMenu->ClearServerList();
-			FUniqueNetIdPtr netID = _OnlineIdentity->GetUniquePlayerId(LocalUserNum);
-			UE_LOG(LogTemp, Warning, TEXT("Starting Friend Search"));
-			_OnlineSession->FindFriendSession(*netID, FriendsList[FriendsListSearchIndex]->GetUserId().Get());
-		}
+		_OnlineFriends->GetFriendsList(LocalUserNum, ListName, FriendsList);
 	}
 }
 
@@ -315,11 +323,13 @@ void USpaceShipSurvivalGameInstance::CreateSession() {
 			sessionSettings.NumPublicConnections = DesiredPlayerLimit;
 			sessionSettings.NumPrivateConnections = 0;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Desired Server Type: "), *DesiredServerType);
+		UE_LOG(LogTemp, Warning, TEXT("Desired Server Type: %s"), *DesiredServerType);
 		UE_LOG(LogTemp, Warning, TEXT("Setting Desired Password to %s"), *DesiredPassword)
+		int32 numPlayers = 1;
 		sessionSettings.Set(SERVER_NAME_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		sessionSettings.Set(PASSWORD_KEY, DesiredPassword, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		sessionSettings.Set(SERVER_TYPE_KEY, DesiredServerType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		sessionSettings.Set(NUM_PLAYERS_KEY, numPlayers, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		_OnlineSession->CreateSession(0, NAME_GameSession, sessionSettings);
 }
 
@@ -330,4 +340,13 @@ void USpaceShipSurvivalGameInstance::SendFriendServersToMenu()
 	}
 
 	FriendsListSearchIndex = 0;
+	FriendServers.Empty();
+	FriendSearchResults.Empty();
+}
+
+void USpaceShipSurvivalGameInstance::FindFriendSessions()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Starting Friend Search"));
+	_OnlineSession->FindFriendSession(0, FriendsList[FriendsListSearchIndex]->GetUserId().Get());
+
 }

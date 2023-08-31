@@ -7,6 +7,9 @@
 #include "InputActionValue.h"
 #include "SpaceShipSurvivalCharacter.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteract, APlayerController*, PlayerController);
+
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
@@ -39,6 +42,9 @@ class ASpaceShipSurvivalCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
+	class UInputAction* InteractAction;
+
 	
 public:
 	ASpaceShipSurvivalCharacter();
@@ -56,6 +62,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
 	bool bHasRifle;
 
+	UPROPERTY()
+	FOnInteract OnInteract;
+
+	virtual void Tick(float DeltaTime) override;
+
 	/** Setter to set the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	void SetHasRifle(bool bNewHasRifle);
@@ -64,12 +75,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
 
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	void Interact();
 
 protected:
 	// APawn interface
@@ -81,6 +95,7 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
 
 
 };

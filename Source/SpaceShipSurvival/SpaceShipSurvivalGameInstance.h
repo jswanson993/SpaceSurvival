@@ -72,4 +72,5 @@ private:
 	void OnReadFriendsListComplete(int32 LocalUserNum, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr);
 	void CreateSession();
 	void SendFriendServersToMenu();
+	void FindFriendSessions();
 };

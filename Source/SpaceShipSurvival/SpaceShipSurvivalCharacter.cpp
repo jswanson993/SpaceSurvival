@@ -7,6 +7,8 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Net/UnrealNetwork.h"
+#include "DrawDebugHelpers.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,7 @@ ASpaceShipSurvivalCharacter::ASpaceShipSurvivalCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	bReplicates = true;
 }
 
 void ASpaceShipSurvivalCharacter::BeginPlay()
@@ -69,6 +72,9 @@ void ASpaceShipSurvivalCharacter::SetupPlayerInputComponent(class UInputComponen
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Look);
+
+		//Interacting
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Interact);
 	}
 }
 
@@ -97,6 +103,40 @@ void ASpaceShipSurvivalCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void ASpaceShipSurvivalCharacter::Interact()
+{
+	APlayerController* playerController = Cast<APlayerController>(GetController());
+	if(playerController == nullptr) return;
+
+	OnInteract.Broadcast(playerController);
+}
+
+FString GetRoleString(ENetRole Role) {
+	
+	switch (Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	case ROLE_MAX:
+		return "Max";
+	default:
+		return "Error";
+	}
+
+}
+
+void ASpaceShipSurvivalCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	DrawDebugString(GetWorld(), FVector(0,0,100), GetRoleString(GetLocalRole()), this, FColor::White, DeltaTime);
 }
 
 void ASpaceShipSurvivalCharacter::SetHasRifle(bool bNewHasRifle)
