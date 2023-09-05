@@ -3,14 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interactable/InteractableBase.h"
+#include "Interactable/Interactable.h"
+#include "GameFramework/Actor.h"
 #include "SpaceShipSurvivalShipControls.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShipControls : public AInteractableBase
+class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShipControls : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -18,6 +19,9 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShipControls : public AInteractabl
 	class UBoxComponent* Collider;
 	UPROPERTY(EditAnywhere, Category=Mesh)
 	UStaticMeshComponent* Seat;
+
+	UPROPERTY(EditAnywhere, Category = Interaction)
+	class UInteractableComponent* Interactable;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category=Pawn, meta = (AllowPrivateAccess = "true"))
 	APawn* Ship;
@@ -29,7 +33,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void Interact(class APlayerController* PlayerController) override;
+	virtual void Interact_Implementation(class APlayerController* PlayerController) override;
 
 public:
 

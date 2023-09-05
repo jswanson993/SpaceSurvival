@@ -22,6 +22,9 @@ class SPACESHIPSURVIVAL_API IInteractable
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void Interact(class APlayerController* PlayerController);
+
 	UFUNCTION()
-	virtual void Interact(class APlayerController* PlayerController) = 0;
+	virtual void Interact_Implementation(class APlayerController* PlayerController) = 0;
 };
