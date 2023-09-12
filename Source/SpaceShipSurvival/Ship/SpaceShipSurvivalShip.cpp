@@ -11,6 +11,9 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/LocalPlayer.h"
 
+#include "ShipMovementComponent.h"
+#include "ShipMovementReplicator.h"
+
 // Sets default values
 ASpaceShipSurvivalShip::ASpaceShipSurvivalShip()
 {
@@ -26,6 +29,10 @@ ASpaceShipSurvivalShip::ASpaceShipSurvivalShip()
 	SpringArm->SetupAttachment(RootComponent);
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
+	
+	MovementComponent = CreateDefaultSubobject<UShipMovementComponent>(TEXT("Movement Component"));
+	MovementReplicator = CreateDefaultSubobject<UShipMovementReplicator>(TEXT("Movement Replicator"));
+	
 }
 
 // Called when the game starts or when spawned
@@ -62,7 +69,7 @@ void ASpaceShipSurvivalShip::PossessedBy(AController* NewController)
 void ASpaceShipSurvivalShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	/*
 	CalculateForwardVelocity(DeltaTime);
 	CalculateAngularVelocity(DeltaTime);
 
@@ -74,7 +81,7 @@ void ASpaceShipSurvivalShip::Tick(float DeltaTime)
 		UE_LOG(LogTemp, Warning, TEXT("Blocking Hit"));
 		Velocity = FVector::Zero();
 	}
-
+	*/
 }
 
 // Called to bind functionality to input
@@ -100,26 +107,42 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 void ASpaceShipSurvivalShip::ApplyThrottle(const FInputActionValue& Value)
 {
-	float desiredThrottle = Throttle;
-	desiredThrottle += Value.Get<FInputActionValue::Axis1D>();
+	if(MovementComponent == nullptr) return;
 
-	Throttle = FMath::Clamp(desiredThrottle, MinThrottle, MaxThrottle);
-	UE_LOG(LogTemp, Warning, TEXT("Applying %f amount of throttle"), Throttle);
+	MovementComponent->SetThrottle(Value.Get<FInputActionValue::Axis1D>());
 }
 
 void ASpaceShipSurvivalShip::ApplyTurn(const FInputActionValue& Value)
 {
+	if(MovementComponent == nullptr) return;
+
 	FVector2D turnAmount = Value.Get<FInputActionValue::Axis2D>();
-	Roll = turnAmount.X;
-	Pitch = turnAmount.Y;
-	UE_LOG(LogTemp, Warning, TEXT("Applying %f amount of roll"), Roll);
-	UE_LOG(LogTemp, Warning, TEXT("Applying %f amount for pitch"), Pitch);
+	
+	MovementComponent->SetRoll(turnAmount.X);
+	MovementComponent->SetPitch(turnAmount.Y);
 }
 
 void ASpaceShipSurvivalShip::ApplyYaw(const FInputActionValue& Value)
 {
-	Yaw = Value.Get<FInputActionValue::Axis1D>();
-	UE_LOG(LogTemp, Warning, TEXT("Applying %f amount of yaw"), Yaw);
+	if(MovementComponent == nullptr) return;
+
+	MovementComponent->SetYaw(Value.Get<FInputActionValue::Axis1D>());
+	
+}
+
+void ASpaceShipSurvivalShip::TurnComplete(const FInputActionValue& Value)
+{
+	if(MovementComponent == nullptr) return;
+
+	MovementComponent->SetPitch(0);
+	MovementComponent->SetRoll(0);
+}
+
+void ASpaceShipSurvivalShip::YawComplete(const FInputActionValue& Value)
+{
+	if(MovementComponent == nullptr) return;
+
+	MovementComponent->SetYaw(0);
 }
 
 void ASpaceShipSurvivalShip::CalculateForwardVelocity(float DeltaTime)

@@ -136,7 +136,7 @@ FString GetRoleString(ENetRole Role) {
 void ASpaceShipSurvivalCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	DrawDebugString(GetWorld(), FVector(0,0,100), GetRoleString(GetLocalRole()), this, FColor::White, DeltaTime);
+	DrawDebugString(GetWorld(), FVector(0,0,100), GetRoleString(GetRemoteRole()), this, FColor::White, DeltaTime);
 }
 
 void ASpaceShipSurvivalCharacter::SetHasRifle(bool bNewHasRifle)

@@ -3,28 +3,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Interface.h"
+#include "GameFramework/Actor.h"
 #include "Interactable.generated.h"
 
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UInteractable : public UInterface
-{
-	GENERATED_BODY()
-};
-
-/**
- * 
- */
-class SPACESHIPSURVIVAL_API IInteractable
+UCLASS(Abstract, Blueprintable)
+class SPACESHIPSURVIVAL_API AInteractable : public AActor
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+private:
+	UUserWidget* PromptWidget;
+	class ASpaceShipSurvivalCharacter* Character;
+	UPROPERTY(VisibleAnywhere, Category = "Trigger")
+	class USphereComponent* InteractVolume;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category=UI)
+	TSubclassOf<UUserWidget> PromptWidgetClass;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
 public:
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+
+	AInteractable();
+
+	UFUNCTION(BlueprintNativeEvent)
 	void Interact(class APlayerController* PlayerController);
 
+	virtual void Interact_Implementation(class APlayerController* PlayerController) { return; }
+
+		UFUNCTION()
+	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	UFUNCTION()
-	virtual void Interact_Implementation(class APlayerController* PlayerController) = 0;
+	void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

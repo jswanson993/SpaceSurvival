@@ -79,6 +79,12 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShip : public APawn
 
 	FVector Velocity;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UShipMovementComponent* MovementComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UShipMovementReplicator* MovementReplicator;
+
+
 public:
 	// Sets default values for this pawn's properties
 	ASpaceShipSurvivalShip();
@@ -98,8 +104,8 @@ public:
 	void ApplyThrottle(const FInputActionValue& Value);
 	void ApplyTurn(const FInputActionValue& Value);
 	void ApplyYaw(const FInputActionValue& Value);
-	void TurnComplete(const FInputActionValue& Value){ Roll = 0; Pitch = 0; }
-	void YawComplete(const FInputActionValue& Value){ Yaw = 0; }
+	void TurnComplete(const FInputActionValue& Value);
+	void YawComplete(const FInputActionValue& Value);
 
 private:
 
