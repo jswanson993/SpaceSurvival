@@ -24,12 +24,35 @@ void UShipMovementComponent::BeginPlay()
 }
 
 
+FString GetRoleString2(ENetRole Role) {
+
+	switch (Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	case ROLE_MAX:
+		return "Max";
+	default:
+		return "Error";
+	}
+
+}
+
 // Called every frame
 void UShipMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (GetOwnerRole() == ROLE_AutonomousProxy || GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy) {
+	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetRoleString2(GetOwnerRole()), this->GetOwner(), FColor::White, DeltaTime);
+	//UE_LOG(LogTemp, Warning, TEXT("We are local role: %s"), *GetRoleString(GetOwnerRole()));
+	//UE_LOG(LogTemp, Warning, TEXT("We are remote role: %s"), *GetRoleString(GetOwner()->GetRemoteRole()));
+	APawn* Owner = Cast<APawn>(GetOwner());
+	if (GetOwnerRole() == ROLE_AutonomousProxy || (GetOwnerRole() == ROLE_Authority && Owner->IsLocallyControlled())) {
 		LastMove = CreateMove(DeltaTime);
 		SimulateMove(LastMove);
 	}
@@ -80,7 +103,7 @@ void UShipMovementComponent::UpdateLocationFromVelocity(FShipMove& Move)
 
 void UShipMovementComponent::CalculateForwardVelocity(FShipMove Move)
 {
-	if(Throttle != 0){
+	if(Move.Throttle != 0){
 		FVector force = GetOwner()->GetActorForwardVector() * MaxThrusterForce * Move.Throttle;
 		FVector acceleration = force / Mass;
 		Velocity += acceleration * Move.DeltaTime;
@@ -115,7 +138,7 @@ FShipMove UShipMovementComponent::CreateMove(float DeltaTime)
 	newMove.Yaw = Yaw;
 	newMove.Roll = Roll;
 	newMove.DeltaTime = DeltaTime;
-	newMove.Time = DeltaTime + LastMove.Time;
+	newMove.Time = GetWorld()->TimeSeconds;
 
 	return newMove;
 }

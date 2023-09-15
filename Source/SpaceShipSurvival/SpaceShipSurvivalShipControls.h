@@ -34,8 +34,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Interact_Implementation(class APlayerController* PlayerController) override;
-	UFUNCTION(Server, Reliable)
-	void Server_PossessShip(APlayerController* PlayerController);
 
 public:
 	UFUNCTION(BlueprintCallable)

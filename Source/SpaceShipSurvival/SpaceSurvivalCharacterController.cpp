@@ -41,3 +41,9 @@ void ASpaceSurvivalCharacterController::LoadMenu()
 	auto gameInstance = Cast<USpaceShipSurvivalGameInstance>(GetGameInstance());
 	gameInstance->LoadInGameMenu();
 }
+
+void ASpaceSurvivalCharacterController::Server_Possess_Implementation(APawn* NewPawn)
+{
+	this->UnPossess();
+	this->Possess(NewPawn);
+}

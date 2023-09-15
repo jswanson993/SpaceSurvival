@@ -3,8 +3,8 @@
 
 #include "ShipMovementReplicator.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/Actor.h"
 
-#include "ShipMovementComponent.h"
 
 // Sets default values for this component's properties
 UShipMovementReplicator::UShipMovementReplicator()
@@ -13,7 +13,7 @@ UShipMovementReplicator::UShipMovementReplicator()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	SetIsReplicatedByDefault(true);
 }
 
 void UShipMovementReplicator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)  const {
@@ -25,9 +25,8 @@ void UShipMovementReplicator::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 void UShipMovementReplicator::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
 	
+	MovementComponent = GetOwner()->FindComponentByClass<UShipMovementComponent>();
 }
 
 
@@ -39,23 +38,22 @@ void UShipMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickType
 	if(MovementComponent == nullptr) return;
 
 	FShipMove Move = MovementComponent->GetLastMove();
-	
+
+	APawn* Owner = Cast<APawn>(GetOwner()); // Need to get owner as pawn because GetOwner->GetRemoteRole() returns inconsistant results
+
 	if(GetOwnerRole() == ROLE_AutonomousProxy){
 		UnacknowlegedMoves.Add(Move);
 		Server_SendMove(Move);
 	}
 
-	if (GetOwnerRole() == ROLE_Authority) {
+	//We are the server and are controlling the pawn
+	if (GetOwnerRole() == ROLE_Authority &&  Owner->IsLocallyControlled()) {
 		UpdateServerState(Move);
 	}
 
 	if (GetOwnerRole() == ROLE_SimulatedProxy) {
 		ClientTick(DeltaTime);
 	}
-
-
-	ClearAcknowledgedMoves(Move);
-	
 }
 
 void UShipMovementReplicator::ClientTick(float DeltaTime)
@@ -63,16 +61,15 @@ void UShipMovementReplicator::ClientTick(float DeltaTime)
 	ClientTimeSinceLastUpdate += DeltaTime;
 
 	if(ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) return;
+	if(MovementComponent == nullptr) return;
 
-	float lerpRatio = ClientTimeSinceLastUpdate/ClientTimeBetweenLastUpdates;
-	float VelocityToDerivative = ClientTimeBetweenLastUpdates * 100; //Convert from meters per second to centimeters per second
+	float lerpRatio =  ClientTimeSinceLastUpdate / ClientTimeBetweenLastUpdates;
 
-	FHermiteCubicSpline spline = CreateSpline(VelocityToDerivative);
+	FHermiteCubicSpline spline = CreateSpline();
 
 	InterpolateLocation(spline, lerpRatio);
 	InterpolateVelocity(spline, lerpRatio);
 	InterpolateRotation(lerpRatio);
-
 }
 
 void UShipMovementReplicator::Server_SendMove_Implementation(FShipMove Move)
@@ -84,16 +81,30 @@ void UShipMovementReplicator::Server_SendMove_Implementation(FShipMove Move)
 }
 
 bool UShipMovementReplicator::Server_SendMove_Validate(FShipMove Move) {
+	float ProposedTime = ClientSimulatedTime + Move.DeltaTime;
+	bool ClientNotRunningAhead = ProposedTime < GetWorld()->TimeSeconds;
+	if (!ClientNotRunningAhead) {
+		UE_LOG(LogTemp, Error, TEXT("Client is running too fast."))
+			return false;
+	}
+
+	if (!Move.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Received invalid move."))
+			return false;
+	}
+
 	return true;
 }
 
-void UShipMovementReplicator::UpdateServerState(const FShipMove Move)
+void UShipMovementReplicator::UpdateServerState(const FShipMove& Move)
 {
 	if(MovementComponent == nullptr) return;
 
 	ServerState.Velocity = MovementComponent->GetVelocity();
-	ServerState.Transform = GetOwner()->GetTransform();
+	ServerState.Transform = GetOwner()->GetActorTransform();
 	ServerState.LastMove = Move;
+
 }
 
 void UShipMovementReplicator::ClearAcknowledgedMoves(FShipMove LastMove)
@@ -126,9 +137,11 @@ void UShipMovementReplicator::AutonomousProxy_OnRep_ServerState()
 
 	GetOwner()->SetActorTransform(ServerState.Transform);
 	MovementComponent->SetVelocity(ServerState.Velocity);
+
 	ClearAcknowledgedMoves(ServerState.LastMove);
 
-	for (const FShipMove& Move : UnacknowlegedMoves) {
+	for (const FShipMove& Move : UnacknowlegedMoves) 
+	{
 		MovementComponent->SimulateMove(Move);
 	}
 }
@@ -140,44 +153,53 @@ void UShipMovementReplicator::SimulatedProxy_OnRep_ServerState()
 	ClientTimeBetweenLastUpdates = ClientTimeSinceLastUpdate;
 	ClientTimeSinceLastUpdate = 0;
 
-	ClientStartTransform.SetLocation(GetOwner()->GetActorLocation());
-	ClientStartTransform.SetRotation(GetOwner()->GetActorQuat());
+	if(MeshOffsetRoot != nullptr)
+	{
+		ClientStartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
+		ClientStartTransform.SetRotation(MeshOffsetRoot->GetComponentQuat());
+	}
 	ClientStartVelocity = MovementComponent->GetVelocity();
-
+	
 	GetOwner()->SetActorTransform(ServerState.Transform);
-
 }
 
-FHermiteCubicSpline UShipMovementReplicator::CreateSpline(float VelocityToDerivative)
+FHermiteCubicSpline UShipMovementReplicator::CreateSpline()
 {
 	FHermiteCubicSpline spline;
 	spline.StartLocation = ClientStartTransform.GetLocation();
 	spline.TargetLocation = ServerState.Transform.GetLocation();
-	spline.StartDerivative = ClientStartVelocity * VelocityToDerivative;
-	spline.TargetDerivative = ServerState.Velocity * VelocityToDerivative;
-	return FHermiteCubicSpline();
+	spline.StartDerivative = ClientStartVelocity * VelocityToDerivative();
+	spline.TargetDerivative = ServerState.Velocity * VelocityToDerivative();
+	return spline;
 }
 
-void UShipMovementReplicator::InterpolateLocation(FHermiteCubicSpline Spline, float LerpRatio)
+void UShipMovementReplicator::InterpolateLocation(FHermiteCubicSpline &Spline, float LerpRatio)
 {
 	FVector nextLocation = Spline.InterpolateLocation(LerpRatio);
-	GetOwner()->SetActorLocation(nextLocation);
+	if(MeshOffsetRoot != nullptr){
+		MeshOffsetRoot->SetWorldLocation(nextLocation);
+	}
+}
+
+void UShipMovementReplicator::InterpolateVelocity(FHermiteCubicSpline &Spline, float LerpRatio)
+{
+	FVector nextDerivative = Spline.InterpolateDerivative(LerpRatio);
+	FVector nextVelocity = nextDerivative / VelocityToDerivative();
+	MovementComponent->SetVelocity(nextVelocity);
 }
 
 void UShipMovementReplicator::InterpolateRotation(float LerpRatio)
 {
 	FQuat targetRotation = ServerState.Transform.GetRotation();
 	FQuat nextRotation = FQuat::Slerp(ClientStartTransform.GetRotation(), targetRotation, LerpRatio);
-	GetOwner()->SetActorRotation(nextRotation);
 
+	if(MeshOffsetRoot != nullptr){
+		MeshOffsetRoot->SetWorldRotation(nextRotation);
+	}
 }
 
-void UShipMovementReplicator::InterpolateVelocity(FHermiteCubicSpline Spline, float LerpRatio)
+float UShipMovementReplicator::VelocityToDerivative()
 {
-	FVector nextDerivative = Spline.InterpolateDerivative(LerpRatio);
-	FVector nextVelocity = nextDerivative / ServerState.Velocity;
-
-	MovementComponent->SetVelocity(nextVelocity);
-	
+	 return ClientTimeBetweenLastUpdates * 100;  //Convert from meters per second to centimeters per second
 }
 
