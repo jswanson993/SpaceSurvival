@@ -24,33 +24,11 @@ void UShipMovementComponent::BeginPlay()
 }
 
 
-FString GetRoleString2(ENetRole Role) {
-
-	switch (Role)
-	{
-	case ROLE_None:
-		return "None";
-	case ROLE_SimulatedProxy:
-		return "SimulatedProxy";
-	case ROLE_AutonomousProxy:
-		return "AutonomousProxy";
-	case ROLE_Authority:
-		return "Authority";
-	case ROLE_MAX:
-		return "Max";
-	default:
-		return "Error";
-	}
-
-}
-
 // Called every frame
 void UShipMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetRoleString2(GetOwnerRole()), this->GetOwner(), FColor::White, DeltaTime);
-	//UE_LOG(LogTemp, Warning, TEXT("We are local role: %s"), *GetRoleString(GetOwnerRole()));
-	//UE_LOG(LogTemp, Warning, TEXT("We are remote role: %s"), *GetRoleString(GetOwner()->GetRemoteRole()));
+
 	APawn* Owner = Cast<APawn>(GetOwner());
 	if (GetOwnerRole() == ROLE_AutonomousProxy || (GetOwnerRole() == ROLE_Authority && Owner->IsLocallyControlled())) {
 		LastMove = CreateMove(DeltaTime);
