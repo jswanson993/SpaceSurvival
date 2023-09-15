@@ -24,6 +24,9 @@ public:
 	UFUNCTION()
 	void LoadMenu();
 
+	UFUNCTION(Server, Reliable)
+	void Server_Possess(APawn* NewPawn);
+
 private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))

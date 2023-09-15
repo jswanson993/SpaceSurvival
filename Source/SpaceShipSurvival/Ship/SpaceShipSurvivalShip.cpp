@@ -19,19 +19,25 @@ ASpaceShipSurvivalShip::ASpaceShipSurvivalShip()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	//RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	RootComponent = BoxCollider;
-	//BoxCollider->SetupAttachment(RootComponent);
+
+	MeshOffsetRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MeshOffsetRoot"));
+	MeshOffsetRoot->SetupAttachment(RootComponent);
+
 	HullMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Hull"));
-	HullMesh->SetupAttachment(BoxCollider);
+	HullMesh->SetupAttachment(MeshOffsetRoot);
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
-	SpringArm->SetupAttachment(RootComponent);
+	SpringArm->SetupAttachment(MeshOffsetRoot);
+
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 	
 	MovementComponent = CreateDefaultSubobject<UShipMovementComponent>(TEXT("Movement Component"));
 	MovementReplicator = CreateDefaultSubobject<UShipMovementReplicator>(TEXT("Movement Replicator"));
+
+	bReplicates = true;
+	SetReplicateMovement(false);
 	
 }
 
@@ -48,40 +54,24 @@ void ASpaceShipSurvivalShip::BeginPlay()
 			Subsystem->AddMappingContext(ShipMappingContext, 0);
 		}
 	}
+
+	if (HasAuthority()) {
+		NetUpdateFrequency = 10;
+	}
 	
 }
 
 void ASpaceShipSurvivalShip::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
-	APlayerController* playerController = Cast<APlayerController>(NewController);
-	if(playerController == nullptr) return;
-
-	UE_LOG(LogTemp, Warning, TEXT("Being Possessed"));
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer())) {
-		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
-		Subsystem->AddMappingContext(ShipMappingContext, 0);
-	}
+	//Reset pawn so input can be remapped
+	Restart();
 }
 
 // Called every frame
 void ASpaceShipSurvivalShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	/*
-	CalculateForwardVelocity(DeltaTime);
-	CalculateAngularVelocity(DeltaTime);
-
-	FVector Translation = Velocity * DeltaTime * 100;
-	FHitResult CollisionResult;
-	AddActorWorldOffset(Translation, true, &CollisionResult);
-
-	if (CollisionResult.IsValidBlockingHit()) {
-		UE_LOG(LogTemp, Warning, TEXT("Blocking Hit"));
-		Velocity = FVector::Zero();
-	}
-	*/
 }
 
 // Called to bind functionality to input
@@ -108,7 +98,6 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 void ASpaceShipSurvivalShip::ApplyThrottle(const FInputActionValue& Value)
 {
 	if(MovementComponent == nullptr) return;
-
 	MovementComponent->SetThrottle(Value.Get<FInputActionValue::Axis1D>());
 }
 
@@ -145,48 +134,14 @@ void ASpaceShipSurvivalShip::YawComplete(const FInputActionValue& Value)
 	MovementComponent->SetYaw(0);
 }
 
-void ASpaceShipSurvivalShip::CalculateForwardVelocity(float DeltaTime)
+void ASpaceShipSurvivalShip::Restart()
 {
-	FVector force = GetActorForwardVector() * MaxThrusterForce * Throttle;
-	FVector acceleration = force / Mass;
-	Velocity += acceleration * DeltaTime;
+	Super::Restart();
+	APlayerController* controller = Cast<APlayerController>(GetController());
+	if(controller == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("Being Possessed"));
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(controller->GetLocalPlayer())) {
+		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
+		Subsystem->AddMappingContext(ShipMappingContext, 0);
+	}
 }
-
-void ASpaceShipSurvivalShip::CalculateAngularVelocity(float DeltaTime)
-{
-
-/**
-	float DeltaLocation = Velocity.Dot(GetOwner()->GetActorForwardVector()) * DeltaTime;
-	float RotationAngle = DeltaLocation / MinimumTurningRadius * _SteeringThrow;
-	FQuat RotationDelta(GetOwner()->GetActorUpVector(), RotationAngle);
-
-	Velocity = RotationDelta.RotateVector(Velocity);
-	GetOwner()->AddActorWorldRotation(RotationDelta);
-	**/
-
-
-	
-	float rollForce = MaxRollForce * Roll * DeltaTime;
-	float rollAcceleration = rollForce / Mass;
-	FQuat RollDelta(GetActorForwardVector(), rollAcceleration);
-	AddActorWorldRotation(RollDelta);
-
-	float DeltaLocation = Velocity.Dot(GetActorForwardVector()) * DeltaTime;
-	float PitchAngle = DeltaLocation / MinPitchRadius * Pitch;
-	FQuat PitchDelta(GetActorRightVector(), PitchAngle);
-	Velocity = PitchDelta.RotateVector(Velocity);
-	AddActorWorldRotation(PitchDelta);
-
-	float YawAngle = DeltaLocation / MinYawRadius * Yaw;
-	FQuat YawDelta(GetActorUpVector(), YawAngle);
-	Velocity = YawDelta.RotateVector(Velocity);
-	AddActorWorldRotation(YawDelta);
-
-
-	//FQuat RotationDelta;
-	//RotationDelta = PitchDelta + YawDelta;
-	//Velocity = RotationDelta.RotateVector(Velocity);
-	//RotationDelta += RollDelta;
-	//AddActorWorldRotation(RotationDelta);
-}
-

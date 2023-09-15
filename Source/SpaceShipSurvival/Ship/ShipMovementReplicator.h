@@ -25,7 +25,7 @@ struct FHermiteCubicSpline {
 		return FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
 	}
 	FVector InterpolateDerivative(float LerpRatio) {
-		return FMath::CubicInterpDerivative<FVector>(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+		return FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
 	}
 };
 
@@ -47,13 +47,16 @@ private:
 	FTransform ClientStartTransform;
 	FVector ClientStartVelocity;
 
-	float ClientSimulatedTime;
-	float ClientTimeSinceLastUpdate;
-	float ClientTimeBetweenLastUpdates;
+	float ClientSimulatedTime = 0.f;
+	float ClientTimeSinceLastUpdate = 0.f;
+	float ClientTimeBetweenLastUpdates = 0.f;
+	UPROPERTY()
+	USceneComponent* MeshOffsetRoot;
 
 public:	
 	// Sets default values for this component's properties
 	UShipMovementReplicator();
+
 
 protected:
 	// Called when the game starts
@@ -63,14 +66,15 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-
+	UFUNCTION(BlueprintCallable)
+	void SetMeshOffsetRoot(USceneComponent* Root) {MeshOffsetRoot = Root;}
 private:
 	
 	void ClientTick(float DeltaTime);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendMove(FShipMove Move);
-	void UpdateServerState(const FShipMove Move);
+	void UpdateServerState(const FShipMove& Move);
 	void ClearAcknowledgedMoves(FShipMove LastMove);
 	
 	UFUNCTION()
@@ -78,8 +82,9 @@ private:
 	UFUNCTION()
 	void AutonomousProxy_OnRep_ServerState();
 	void SimulatedProxy_OnRep_ServerState();
-	FHermiteCubicSpline CreateSpline(float VelocityToDerivative);
-	void InterpolateLocation(FHermiteCubicSpline Spline, float LerpRatio);
-	void InterpolateVelocity(FHermiteCubicSpline Spline, float LerpRatio);
+	FHermiteCubicSpline CreateSpline();
+	void InterpolateLocation(FHermiteCubicSpline &Spline, float LerpRatio);
+	void InterpolateVelocity(FHermiteCubicSpline &Spline, float LerpRatio);
 	void InterpolateRotation(float LerpRatio);
+	float VelocityToDerivative();
 };

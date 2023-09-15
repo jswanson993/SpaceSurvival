@@ -29,7 +29,8 @@ void UShipMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (GetOwnerRole() == ROLE_AutonomousProxy || GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy) {
+	APawn* Owner = Cast<APawn>(GetOwner());
+	if (GetOwnerRole() == ROLE_AutonomousProxy || (GetOwnerRole() == ROLE_Authority && Owner->IsLocallyControlled())) {
 		LastMove = CreateMove(DeltaTime);
 		SimulateMove(LastMove);
 	}
@@ -80,7 +81,7 @@ void UShipMovementComponent::UpdateLocationFromVelocity(FShipMove& Move)
 
 void UShipMovementComponent::CalculateForwardVelocity(FShipMove Move)
 {
-	if(Throttle != 0){
+	if(Move.Throttle != 0){
 		FVector force = GetOwner()->GetActorForwardVector() * MaxThrusterForce * Move.Throttle;
 		FVector acceleration = force / Mass;
 		Velocity += acceleration * Move.DeltaTime;
@@ -115,7 +116,7 @@ FShipMove UShipMovementComponent::CreateMove(float DeltaTime)
 	newMove.Yaw = Yaw;
 	newMove.Roll = Roll;
 	newMove.DeltaTime = DeltaTime;
-	newMove.Time = DeltaTime + LastMove.Time;
+	newMove.Time = GetWorld()->TimeSeconds;
 
 	return newMove;
 }

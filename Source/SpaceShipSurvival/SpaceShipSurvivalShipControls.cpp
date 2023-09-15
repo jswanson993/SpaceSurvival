@@ -5,6 +5,9 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Blueprint/UserWidget.h"
+
+#include "SpaceSurvivalCharacterController.h"
 
 ASpaceShipSurvivalShipControls::ASpaceShipSurvivalShipControls()
 {
@@ -24,36 +27,17 @@ void ASpaceShipSurvivalShipControls::BeginPlay()
 
 void ASpaceShipSurvivalShipControls::Interact_Implementation(APlayerController* PlayerController)
 {
+	auto controller = Cast<ASpaceSurvivalCharacterController>(PlayerController);
+	if(controller == nullptr) return;
 	if (bIsBeingUsed == false) {
 		bIsBeingUsed = true;
-		switch (PlayerController->GetLocalRole())
-		{
-		case ROLE_None:
-			break;
-		case ROLE_SimulatedProxy:
-			break;
-		case ROLE_AutonomousProxy:
-			break;
-		case ROLE_Authority:
-			Server_PossessShip(PlayerController);
-		case ROLE_MAX:
-			break;
-		default:
-			break;
+		if (controller->IsLocalController()) {
+			PromptWidget->RemoveFromParent();
 		}
-		Server_PossessShip(PlayerController);
+		controller->Server_Possess(Ship);
+
+
 	}
-}
-
-void ASpaceShipSurvivalShipControls::Server_PossessShip_Implementation(APlayerController* PlayerController)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Possessing Ship"))
-	if(Ship == nullptr) return;
-
-	if (PlayerController->IsLocalController()) {
-		PlayerController->Possess(Ship);
-	}
-
 }
 
 void ASpaceShipSurvivalShipControls::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const

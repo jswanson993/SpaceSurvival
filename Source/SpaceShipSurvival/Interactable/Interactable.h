@@ -12,14 +12,15 @@ class SPACESHIPSURVIVAL_API AInteractable : public AActor
 	GENERATED_BODY()
 
 private:
-	UUserWidget* PromptWidget;
 	class ASpaceShipSurvivalCharacter* Character;
-	UPROPERTY(VisibleAnywhere, Category = "Trigger")
+	UPROPERTY(EditAnywhere, Category = "Trigger")
 	class USphereComponent* InteractVolume;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category=UI)
 	TSubclassOf<UUserWidget> PromptWidgetClass;
+
+	UUserWidget* PromptWidget;
 
 protected:
 	// Called when the game starts or when spawned
