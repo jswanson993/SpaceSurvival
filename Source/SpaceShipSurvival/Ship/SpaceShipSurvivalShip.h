@@ -43,6 +43,8 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShip : public APawn
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* YawAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	class UInputAction* ExitAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UShipMovementComponent* MovementComponent;
@@ -71,6 +73,7 @@ public:
 	void ApplyYaw(const FInputActionValue& Value);
 	void TurnComplete(const FInputActionValue& Value);
 	void YawComplete(const FInputActionValue& Value);
+	void Exit(const FInputActionValue& Value);
 	virtual void Restart() override;
 
 private:

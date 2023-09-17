@@ -13,6 +13,7 @@
 
 #include "ShipMovementComponent.h"
 #include "ShipMovementReplicator.h"
+#include "SpaceShipSurvival/SpaceSurvivalCharacterController.h"
 
 // Sets default values
 ASpaceShipSurvivalShip::ASpaceShipSurvivalShip()
@@ -87,6 +88,7 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(YawAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyYaw);
 		EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::TurnComplete);
 		EnhancedInputComponent->BindAction(YawAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::YawComplete);
+		EnhancedInputComponent->BindAction(ExitAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::Exit);
 		UE_LOG(LogTemp, Warning, TEXT("Bound Actions for Space Ship"));
 	}
 	else {
@@ -132,6 +134,17 @@ void ASpaceShipSurvivalShip::YawComplete(const FInputActionValue& Value)
 	if(MovementComponent == nullptr) return;
 
 	MovementComponent->SetYaw(0);
+}
+
+void ASpaceShipSurvivalShip::Exit(const FInputActionValue& Value)
+{
+	bool exitPressed = Value.Get<bool>();
+	if (exitPressed == true) {
+		ASpaceSurvivalCharacterController* characterController = Cast<ASpaceSurvivalCharacterController>(GetController());
+		if (characterController != nullptr) {
+			characterController->PossessDefaultPawn();
+		}
+	}
 }
 
 void ASpaceShipSurvivalShip::Restart()

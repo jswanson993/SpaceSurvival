@@ -25,7 +25,7 @@ struct FShipMove {
 
 	bool IsValid() const
 	{
-		return FMath::Abs(Throttle) <= 1 && FMath::Abs(Pitch) <= 1 && FMath::Abs(Yaw) <= 1 && FMath::Abs(Roll) <= 1;
+		return FMath::Abs(Throttle) <= 1 && FMath::Abs(Yaw) <= 1;
 	}
 };
 

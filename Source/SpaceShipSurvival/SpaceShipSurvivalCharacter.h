@@ -75,7 +75,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
 
-
+	virtual void Restart() override;
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -84,6 +84,9 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void Interact();
+
+	virtual void PossessedBy(AController* NewController) override;
+
 
 protected:
 	// APawn interface
@@ -95,8 +98,6 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-
 
 };
 

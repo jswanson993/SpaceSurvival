@@ -81,6 +81,7 @@ void UShipMovementReplicator::Server_SendMove_Implementation(FShipMove Move)
 }
 
 bool UShipMovementReplicator::Server_SendMove_Validate(FShipMove Move) {
+	
 	float ProposedTime = ClientSimulatedTime + Move.DeltaTime;
 	bool ClientNotRunningAhead = ProposedTime < GetWorld()->TimeSeconds;
 	if (!ClientNotRunningAhead) {
@@ -93,7 +94,7 @@ bool UShipMovementReplicator::Server_SendMove_Validate(FShipMove Move) {
 		UE_LOG(LogTemp, Error, TEXT("Received invalid move."))
 			return false;
 	}
-
+	
 	return true;
 }
 
