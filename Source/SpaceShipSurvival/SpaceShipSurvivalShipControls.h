@@ -38,7 +38,11 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetShip(APawn* NewShip) { OnRep_SetShip(NewShip); }
+	UFUNCTION(BlueprintCallable)
+	void SetIsBeingUsed(bool isBeingUsed);
 private:
 	UFUNCTION()
 	void OnRep_SetShip(APawn* NewShip) { Ship = NewShip; }
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsBeingUsed(bool isBeingUsed);
 };

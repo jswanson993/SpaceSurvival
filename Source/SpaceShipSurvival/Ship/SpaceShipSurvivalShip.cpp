@@ -14,6 +14,7 @@
 #include "ShipMovementComponent.h"
 #include "ShipMovementReplicator.h"
 #include "SpaceShipSurvival/SpaceSurvivalCharacterController.h"
+#include "SpaceShipSurvival/SpaceShipSurvivalShipControls.h"
 
 // Sets default values
 ASpaceShipSurvivalShip::ASpaceShipSurvivalShip()
@@ -140,6 +141,9 @@ void ASpaceShipSurvivalShip::Exit(const FInputActionValue& Value)
 {
 	bool exitPressed = Value.Get<bool>();
 	if (exitPressed == true) {
+		if (Controls != nullptr) {
+			Controls->SetIsBeingUsed(false);
+		}
 		ASpaceSurvivalCharacterController* characterController = Cast<ASpaceSurvivalCharacterController>(GetController());
 		if (characterController != nullptr) {
 			characterController->PossessDefaultPawn();
@@ -154,6 +158,7 @@ void ASpaceShipSurvivalShip::Restart()
 	if(controller == nullptr) return;
 	UE_LOG(LogTemp, Warning, TEXT("Being Possessed"));
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(controller->GetLocalPlayer())) {
+		Subsystem->ClearAllMappings();
 		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
 		Subsystem->AddMappingContext(ShipMappingContext, 0);
 	}

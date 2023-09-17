@@ -12,6 +12,7 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShip : public APawn
 {
 	GENERATED_BODY()
 
+private: 
 	UPROPERTY(VisibleAnywhere, Category=Collision)
 	class UBoxComponent* BoxCollider;
 
@@ -50,6 +51,9 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShip : public APawn
 	class UShipMovementComponent* MovementComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UShipMovementReplicator* MovementReplicator;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	class ASpaceShipSurvivalShipControls* Controls;
 
 
 public:

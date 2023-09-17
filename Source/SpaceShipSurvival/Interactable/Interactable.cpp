@@ -36,7 +36,7 @@ void AInteractable::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 				PromptWidget->AddToViewport();
 			}
 		}
-			
+
 		Character->OnInteract.AddDynamic(this, &AInteractable::Interact);
 		
 	}

@@ -54,29 +54,18 @@ void ASpaceShipSurvivalCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
-	if (ASpaceSurvivalCharacterController* controller = Cast<ASpaceSurvivalCharacterController>(Controller)) {
-		controller->SetDefaultPawn(this);
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
 
 void ASpaceShipSurvivalCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("Setup player input for : %s"), *this->StaticClass()->GetName());
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Gets Here"));
 		//Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		if (MoveAction != nullptr) {
-			UE_LOG(LogTemp, Warning, TEXT("Move Action: %s"), *MoveAction->GetName());
-		}
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Move);
@@ -87,14 +76,12 @@ void ASpaceShipSurvivalCharacter::SetupPlayerInputComponent(class UInputComponen
 
 		//Interacting
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Interact);
-		UE_LOG(LogTemp, Warning, TEXT("Gets Here Too"));
 	}
 }
 
 
 void ASpaceShipSurvivalCharacter::Move(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Triggered"));
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -147,9 +134,6 @@ void ASpaceShipSurvivalCharacter::Restart()
 		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
-
-
-	//SetupPlayerInputComponent(controller->InputComponent);
 }
 
 FString GetRoleString(ENetRole Role) {

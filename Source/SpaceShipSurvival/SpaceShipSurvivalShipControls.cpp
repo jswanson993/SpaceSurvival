@@ -40,6 +40,16 @@ void ASpaceShipSurvivalShipControls::Interact_Implementation(APlayerController* 
 	}
 }
 
+void ASpaceShipSurvivalShipControls::SetIsBeingUsed(bool isBeingUsed)
+{
+	Server_SetIsBeingUsed(isBeingUsed);
+}
+
+void ASpaceShipSurvivalShipControls::Server_SetIsBeingUsed_Implementation(bool isBeingUsed)
+{
+	bIsBeingUsed = isBeingUsed;
+}
+
 void ASpaceShipSurvivalShipControls::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

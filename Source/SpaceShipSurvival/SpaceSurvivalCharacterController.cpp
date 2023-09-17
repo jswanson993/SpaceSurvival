@@ -22,7 +22,7 @@ void ASpaceSurvivalCharacterController::BeginPlay()
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 
-	//DefaultPawn = GetPawn();
+	DefaultPawn = GetPawn();
 }
 
 void ASpaceSurvivalCharacterController::SetupInputComponent()
@@ -46,10 +46,7 @@ void ASpaceSurvivalCharacterController::LoadMenu()
 
 void ASpaceSurvivalCharacterController::PossessDefaultPawn()
 {
-	if(IsLocalController()){
-		this->UnPossess();
-		this->Possess(DefaultPawn);
-	}
+	Server_Possess(DefaultPawn);
 }
 
 void ASpaceSurvivalCharacterController::Server_Possess_Implementation(APawn* NewPawn)
