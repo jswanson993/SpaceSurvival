@@ -20,9 +20,6 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShipControls : public AInteractabl
 	UPROPERTY(EditAnywhere, Category=Mesh)
 	UStaticMeshComponent* Seat;
 
-	//UPROPERTY(EditAnywhere, Category = Interaction)
-	//class UInteractableComponent* Interactable;
-
 	UPROPERTY(ReplicatedUsing = OnRep_SetShip, EditInstanceOnly, Category=Pawn, meta = (AllowPrivateAccess = "true"))
 	APawn* Ship;
 
@@ -38,7 +35,11 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetShip(APawn* NewShip) { OnRep_SetShip(NewShip); }
+	UFUNCTION(BlueprintCallable)
+	void SetIsBeingUsed(bool isBeingUsed);
 private:
 	UFUNCTION()
 	void OnRep_SetShip(APawn* NewShip) { Ship = NewShip; }
+	UFUNCTION(Server, Reliable)
+	void Server_SetIsBeingUsed(bool isBeingUsed);
 };

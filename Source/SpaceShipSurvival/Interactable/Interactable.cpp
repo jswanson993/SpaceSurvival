@@ -36,7 +36,7 @@ void AInteractable::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 				PromptWidget->AddToViewport();
 			}
 		}
-			
+
 		Character->OnInteract.AddDynamic(this, &AInteractable::Interact);
 		
 	}
@@ -48,7 +48,9 @@ void AInteractable::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	auto OtherCharacter = Cast<ASpaceShipSurvivalCharacter>(OtherActor);
 
 	if(OtherCharacter != nullptr && OtherCharacter->IsLocallyControlled() && OtherCharacter == Character){
-		PromptWidget->RemoveFromParent();
+		if(PromptWidget != nullptr && PromptWidget->IsInViewport()){
+			PromptWidget->RemoveFromParent();
+		}
 
 		if (Character != nullptr) {
 			Character->OnInteract.RemoveAll(this);

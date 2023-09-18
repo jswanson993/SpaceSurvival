@@ -29,12 +29,10 @@ void UShipMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	APawn* Owner = Cast<APawn>(GetOwner());
-	if (GetOwnerRole() == ROLE_AutonomousProxy || (GetOwnerRole() == ROLE_Authority && Owner->IsLocallyControlled())) {
+	if (ShouldCreateNewMove()) {
 		LastMove = CreateMove(DeltaTime);
 		SimulateMove(LastMove);
 	}
-
 }
 
 void UShipMovementComponent::SetThrottle(float ThrottleValue)
@@ -121,4 +119,20 @@ FShipMove UShipMovementComponent::CreateMove(float DeltaTime)
 	return newMove;
 }
 
+bool UShipMovementComponent::ShouldCreateNewMove()
+{
+	if(GetOwnerRole() <= ROLE_SimulatedProxy) return false; //Should not create moves if role is simulated or none
+
+	APawn* Owner = Cast<APawn>(GetOwner()); // Need to get owner as pawn because GetOwner->GetRemoteRole() returns inconsistant results
+	if (Owner == nullptr) return false;
+
+	APlayerController* playerController = Cast<APlayerController>(Owner->GetController());
+	bool isPlayerControlled = playerController != nullptr;
+	if (isPlayerControlled) {
+		return (GetOwnerRole() == ROLE_AutonomousProxy) || (ROLE_Authority && Owner->IsLocallyControlled()); //Check if we are client or server as player
+	}
+	else {
+		return true; //If no player is controlling, the ship should move on it's own
+	}
+}
 

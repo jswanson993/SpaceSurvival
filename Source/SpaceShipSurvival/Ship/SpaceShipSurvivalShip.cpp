@@ -13,6 +13,8 @@
 
 #include "ShipMovementComponent.h"
 #include "ShipMovementReplicator.h"
+#include "SpaceShipSurvival/SpaceSurvivalCharacterController.h"
+#include "SpaceShipSurvival/SpaceShipSurvivalShipControls.h"
 
 // Sets default values
 ASpaceShipSurvivalShip::ASpaceShipSurvivalShip()
@@ -68,10 +70,32 @@ void ASpaceShipSurvivalShip::PossessedBy(AController* NewController)
 	Restart();
 }
 
+
+FString GetRoleString2(ENetRole Role) {
+
+	switch (Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	case ROLE_MAX:
+		return "Max";
+	default:
+		return "Error";
+	}
+}
+
+
 // Called every frame
 void ASpaceShipSurvivalShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetRoleString2(GetLocalRole()), this, FColor::White, DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -83,10 +107,12 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Using Enhanced Input"));
 		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyThrottle);
+		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::ThrottleComplete);
 		EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyTurn);
 		EnhancedInputComponent->BindAction(YawAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyYaw);
 		EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::TurnComplete);
 		EnhancedInputComponent->BindAction(YawAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::YawComplete);
+		EnhancedInputComponent->BindAction(ExitAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::Exit);
 		UE_LOG(LogTemp, Warning, TEXT("Bound Actions for Space Ship"));
 	}
 	else {
@@ -99,6 +125,12 @@ void ASpaceShipSurvivalShip::ApplyThrottle(const FInputActionValue& Value)
 {
 	if(MovementComponent == nullptr) return;
 	MovementComponent->SetThrottle(Value.Get<FInputActionValue::Axis1D>());
+}
+
+void ASpaceShipSurvivalShip::ThrottleComplete(const FInputActionValue& Value)
+{
+	if(MovementComponent == nullptr) return;
+	MovementComponent->SetThrottle(0);
 }
 
 void ASpaceShipSurvivalShip::ApplyTurn(const FInputActionValue& Value)
@@ -134,6 +166,20 @@ void ASpaceShipSurvivalShip::YawComplete(const FInputActionValue& Value)
 	MovementComponent->SetYaw(0);
 }
 
+void ASpaceShipSurvivalShip::Exit(const FInputActionValue& Value)
+{
+	bool exitPressed = Value.Get<bool>();
+	if (exitPressed == true) {
+		if (Controls != nullptr) {
+			Controls->SetIsBeingUsed(false);
+		}
+		ASpaceSurvivalCharacterController* characterController = Cast<ASpaceSurvivalCharacterController>(GetController());
+		if (characterController != nullptr) {
+			characterController->PossessDefaultPawn();
+		}
+	}
+}
+
 void ASpaceShipSurvivalShip::Restart()
 {
 	Super::Restart();
@@ -141,6 +187,7 @@ void ASpaceShipSurvivalShip::Restart()
 	if(controller == nullptr) return;
 	UE_LOG(LogTemp, Warning, TEXT("Being Possessed"));
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(controller->GetLocalPlayer())) {
+		Subsystem->ClearAllMappings();
 		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
 		Subsystem->AddMappingContext(ShipMappingContext, 0);
 	}

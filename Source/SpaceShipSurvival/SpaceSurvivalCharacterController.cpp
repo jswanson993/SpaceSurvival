@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
 #include "UObject/ConstructorHelpers.h"
+#include "SpaceShipSurvivalCharacter.h"
 
 ASpaceSurvivalCharacterController::ASpaceSurvivalCharacterController()
 {
@@ -21,6 +22,7 @@ void ASpaceSurvivalCharacterController::BeginPlay()
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 
+	DefaultPawn = GetPawn();
 }
 
 void ASpaceSurvivalCharacterController::SetupInputComponent()
@@ -40,6 +42,11 @@ void ASpaceSurvivalCharacterController::LoadMenu()
 	UE_LOG(LogTemp, Warning, TEXT("Loading Menu"))
 	auto gameInstance = Cast<USpaceShipSurvivalGameInstance>(GetGameInstance());
 	gameInstance->LoadInGameMenu();
+}
+
+void ASpaceSurvivalCharacterController::PossessDefaultPawn()
+{
+	Server_Possess(DefaultPawn);
 }
 
 void ASpaceSurvivalCharacterController::Server_Possess_Implementation(APawn* NewPawn)

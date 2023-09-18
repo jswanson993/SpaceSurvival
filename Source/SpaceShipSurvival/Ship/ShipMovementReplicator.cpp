@@ -39,15 +39,14 @@ void UShipMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickType
 
 	FShipMove Move = MovementComponent->GetLastMove();
 
-	APawn* Owner = Cast<APawn>(GetOwner()); // Need to get owner as pawn because GetOwner->GetRemoteRole() returns inconsistant results
+
 
 	if(GetOwnerRole() == ROLE_AutonomousProxy){
 		UnacknowlegedMoves.Add(Move);
 		Server_SendMove(Move);
 	}
 
-	//We are the server and are controlling the pawn
-	if (GetOwnerRole() == ROLE_Authority &&  Owner->IsLocallyControlled()) {
+	if(ShouldUpdateServer()){
 		UpdateServerState(Move);
 	}
 
@@ -81,6 +80,7 @@ void UShipMovementReplicator::Server_SendMove_Implementation(FShipMove Move)
 }
 
 bool UShipMovementReplicator::Server_SendMove_Validate(FShipMove Move) {
+	
 	float ProposedTime = ClientSimulatedTime + Move.DeltaTime;
 	bool ClientNotRunningAhead = ProposedTime < GetWorld()->TimeSeconds;
 	if (!ClientNotRunningAhead) {
@@ -93,7 +93,7 @@ bool UShipMovementReplicator::Server_SendMove_Validate(FShipMove Move) {
 		UE_LOG(LogTemp, Error, TEXT("Received invalid move."))
 			return false;
 	}
-
+	
 	return true;
 }
 
@@ -201,5 +201,22 @@ void UShipMovementReplicator::InterpolateRotation(float LerpRatio)
 float UShipMovementReplicator::VelocityToDerivative()
 {
 	 return ClientTimeBetweenLastUpdates * 100;  //Convert from meters per second to centimeters per second
+}
+
+bool UShipMovementReplicator::ShouldUpdateServer()
+{
+	if(GetOwnerRole() != ROLE_Authority) return false; //Only authority should send server updates
+
+	APawn* Owner = Cast<APawn>(GetOwner()); // Need to get owner as pawn because GetOwner->GetRemoteRole() returns inconsistant results
+	if(Owner == nullptr) return false;
+
+	APlayerController* playerController = Cast<APlayerController>(Owner->GetController());
+	bool isPlayerControlled = playerController != nullptr;
+	if (isPlayerControlled) {
+		return Owner->IsLocallyControlled(); //Check if we are server as player
+	}
+	else {
+		return true; //If no player is controlling, the ship should move on it's own
+	}
 }
 

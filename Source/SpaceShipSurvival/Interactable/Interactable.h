@@ -20,6 +20,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category=UI)
 	TSubclassOf<UUserWidget> PromptWidgetClass;
 
+	UPROPERTY()
 	UUserWidget* PromptWidget;
 
 protected:

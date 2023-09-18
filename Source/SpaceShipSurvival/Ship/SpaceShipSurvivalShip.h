@@ -12,6 +12,7 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShip : public APawn
 {
 	GENERATED_BODY()
 
+private: 
 	UPROPERTY(VisibleAnywhere, Category=Collision)
 	class UBoxComponent* BoxCollider;
 
@@ -43,12 +44,16 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShip : public APawn
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* YawAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	class UInputAction* ExitAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UShipMovementComponent* MovementComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UShipMovementReplicator* MovementReplicator;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	class ASpaceShipSurvivalShipControls* Controls;
 
 public:
 	// Sets default values for this pawn's properties
@@ -67,10 +72,12 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void ApplyThrottle(const FInputActionValue& Value);
+	void ThrottleComplete(const FInputActionValue& Value);
 	void ApplyTurn(const FInputActionValue& Value);
 	void ApplyYaw(const FInputActionValue& Value);
 	void TurnComplete(const FInputActionValue& Value);
 	void YawComplete(const FInputActionValue& Value);
+	void Exit(const FInputActionValue& Value);
 	virtual void Restart() override;
 
 private:

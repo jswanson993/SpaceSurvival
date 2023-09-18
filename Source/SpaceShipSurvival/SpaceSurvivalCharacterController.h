@@ -14,6 +14,9 @@ class SPACESHIPSURVIVAL_API ASpaceSurvivalCharacterController : public APlayerCo
 {
 	GENERATED_BODY()
 	
+private:
+	APawn* DefaultPawn;
+
 public:
 	ASpaceSurvivalCharacterController();
 
@@ -27,13 +30,14 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Possess(APawn* NewPawn);
 
+	void PossessDefaultPawn();
+
+	void SetDefaultPawn(APawn* NewPawn){DefaultPawn = NewPawn;}
+
 private:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* MenuAction;
-;
-
-
 };

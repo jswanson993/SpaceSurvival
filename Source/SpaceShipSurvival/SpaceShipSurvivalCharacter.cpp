@@ -10,6 +10,7 @@
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
 
+#include "SpaceSurvivalCharacterController.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ASpaceShipSurvivalCharacter
@@ -53,7 +54,6 @@ void ASpaceShipSurvivalCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -69,6 +69,7 @@ void ASpaceShipSurvivalCharacter::SetupPlayerInputComponent(class UInputComponen
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Move);
+
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Look);
@@ -107,10 +108,32 @@ void ASpaceShipSurvivalCharacter::Look(const FInputActionValue& Value)
 
 void ASpaceShipSurvivalCharacter::Interact()
 {
+
 	APlayerController* playerController = Cast<APlayerController>(GetController());
 	if(playerController == nullptr) return;
-
+	
 	OnInteract.Broadcast(playerController);
+}
+
+void ASpaceShipSurvivalCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	Restart();
+}
+
+void ASpaceShipSurvivalCharacter::Restart()
+{
+	Super::Restart();
+	UE_LOG(LogTemp, Warning, TEXT("Restarting"));
+
+	ASpaceSurvivalCharacterController* controller = Cast<ASpaceSurvivalCharacterController>(GetController());
+	if (controller == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("Resetting player mapping context"));
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(controller->GetLocalPlayer())) {
+		Subsystem->ClearAllMappings();
+		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
+		Subsystem->AddMappingContext(DefaultMappingContext, 0);
+	}
 }
 
 FString GetRoleString(ENetRole Role) {
@@ -130,7 +153,6 @@ FString GetRoleString(ENetRole Role) {
 	default:
 		return "Error";
 	}
-
 }
 
 void ASpaceShipSurvivalCharacter::Tick(float DeltaTime)

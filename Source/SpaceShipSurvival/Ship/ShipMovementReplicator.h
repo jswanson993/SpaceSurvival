@@ -87,4 +87,6 @@ private:
 	void InterpolateVelocity(FHermiteCubicSpline &Spline, float LerpRatio);
 	void InterpolateRotation(float LerpRatio);
 	float VelocityToDerivative();
+
+	bool ShouldUpdateServer();
 };
