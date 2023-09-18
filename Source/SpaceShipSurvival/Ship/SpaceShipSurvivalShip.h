@@ -55,7 +55,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	class ASpaceShipSurvivalShipControls* Controls;
 
-
 public:
 	// Sets default values for this pawn's properties
 	ASpaceShipSurvivalShip();
@@ -73,6 +72,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void ApplyThrottle(const FInputActionValue& Value);
+	void ThrottleComplete(const FInputActionValue& Value);
 	void ApplyTurn(const FInputActionValue& Value);
 	void ApplyYaw(const FInputActionValue& Value);
 	void TurnComplete(const FInputActionValue& Value);

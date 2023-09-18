@@ -20,9 +20,6 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShipControls : public AInteractabl
 	UPROPERTY(EditAnywhere, Category=Mesh)
 	UStaticMeshComponent* Seat;
 
-	//UPROPERTY(EditAnywhere, Category = Interaction)
-	//class UInteractableComponent* Interactable;
-
 	UPROPERTY(ReplicatedUsing = OnRep_SetShip, EditInstanceOnly, Category=Pawn, meta = (AllowPrivateAccess = "true"))
 	APawn* Ship;
 

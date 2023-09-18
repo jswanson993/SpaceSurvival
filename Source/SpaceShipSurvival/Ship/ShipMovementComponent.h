@@ -107,4 +107,5 @@ private:
 	void CalculateAngularVelocity(FShipMove Move);
 	
 	FShipMove CreateMove(float DeltaTime);
+	bool ShouldCreateNewMove();
 };

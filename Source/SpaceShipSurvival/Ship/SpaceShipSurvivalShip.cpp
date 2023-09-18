@@ -70,10 +70,32 @@ void ASpaceShipSurvivalShip::PossessedBy(AController* NewController)
 	Restart();
 }
 
+
+FString GetRoleString2(ENetRole Role) {
+
+	switch (Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	case ROLE_MAX:
+		return "Max";
+	default:
+		return "Error";
+	}
+}
+
+
 // Called every frame
 void ASpaceShipSurvivalShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetRoleString2(GetLocalRole()), this, FColor::White, DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -85,6 +107,7 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Using Enhanced Input"));
 		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyThrottle);
+		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::ThrottleComplete);
 		EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyTurn);
 		EnhancedInputComponent->BindAction(YawAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyYaw);
 		EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::TurnComplete);
@@ -102,6 +125,12 @@ void ASpaceShipSurvivalShip::ApplyThrottle(const FInputActionValue& Value)
 {
 	if(MovementComponent == nullptr) return;
 	MovementComponent->SetThrottle(Value.Get<FInputActionValue::Axis1D>());
+}
+
+void ASpaceShipSurvivalShip::ThrottleComplete(const FInputActionValue& Value)
+{
+	if(MovementComponent == nullptr) return;
+	MovementComponent->SetThrottle(0);
 }
 
 void ASpaceShipSurvivalShip::ApplyTurn(const FInputActionValue& Value)
