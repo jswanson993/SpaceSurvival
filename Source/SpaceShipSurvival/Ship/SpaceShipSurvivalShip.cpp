@@ -169,10 +169,10 @@ void ASpaceShipSurvivalShip::YawComplete(const FInputActionValue& Value)
 void ASpaceShipSurvivalShip::Exit(const FInputActionValue& Value)
 {
 	bool exitPressed = Value.Get<bool>();
+
 	if (exitPressed == true) {
-		if (Controls != nullptr) {
-			Controls->SetIsBeingUsed(false);
-		}
+		OnExitShip.Broadcast();
+
 		ASpaceSurvivalCharacterController* characterController = Cast<ASpaceSurvivalCharacterController>(GetController());
 		if (characterController != nullptr) {
 			characterController->PossessDefaultPawn();

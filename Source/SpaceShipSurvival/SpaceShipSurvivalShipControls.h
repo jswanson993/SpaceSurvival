@@ -15,16 +15,15 @@ class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShipControls : public AInteractabl
 {
 	GENERATED_BODY()
 
+private:
 	UPROPERTY(EditAnywhere, Category=Collision)
 	class UBoxComponent* Collider;
 	UPROPERTY(EditAnywhere, Category=Mesh)
 	UStaticMeshComponent* Seat;
 
 	UPROPERTY(ReplicatedUsing = OnRep_SetShip, EditInstanceOnly, Category=Pawn, meta = (AllowPrivateAccess = "true"))
-	APawn* Ship;
+	class ASpaceShipSurvivalShip* Ship;
 
-	UPROPERTY(Replicated)
-	bool bIsBeingUsed = false;
 public:
 	ASpaceShipSurvivalShipControls();
 
@@ -34,12 +33,12 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetShip(APawn* NewShip) { OnRep_SetShip(NewShip); }
-	UFUNCTION(BlueprintCallable)
-	void SetIsBeingUsed(bool isBeingUsed);
+	void SetShip(class ASpaceShipSurvivalShip* NewShip) { OnRep_SetShip(NewShip); }
 private:
 	UFUNCTION()
-	void OnRep_SetShip(APawn* NewShip) { Ship = NewShip; }
-	UFUNCTION(Server, Reliable)
-	void Server_SetIsBeingUsed(bool isBeingUsed);
+	void OnRep_SetShip(class ASpaceShipSurvivalShip* NewShip) { Ship = NewShip; }
+	bool CheckIfBeingUsed();
+
+	UFUNCTION()
+	void OnExitShip();
 };

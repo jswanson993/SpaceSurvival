@@ -7,6 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
 
+#include "Ship/SpaceShipSurvivalShip.h"
 #include "SpaceSurvivalCharacterController.h"
 
 ASpaceShipSurvivalShipControls::ASpaceShipSurvivalShipControls()
@@ -22,38 +23,49 @@ ASpaceShipSurvivalShipControls::ASpaceShipSurvivalShipControls()
 void ASpaceShipSurvivalShipControls::BeginPlay()
 {
 	Super::BeginPlay();
-	OnRep_SetShip(Ship);
 }
 
 void ASpaceShipSurvivalShipControls::Interact_Implementation(APlayerController* PlayerController)
 {
 	auto controller = Cast<ASpaceSurvivalCharacterController>(PlayerController);
 	if(controller == nullptr) return;
-	if (bIsBeingUsed == false) {
-		bIsBeingUsed = true;
+	if(Ship == nullptr) return;
+	if (CheckIfBeingUsed() == false) {
 		if (controller->IsLocalController()) {
-			PromptWidget->RemoveFromParent();
+			PromptWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
+		Ship->OnExitShip.AddDynamic(this, &ASpaceShipSurvivalShipControls::OnExitShip);
 		controller->Server_Possess(Ship);
-
-
 	}
 }
 
-void ASpaceShipSurvivalShipControls::SetIsBeingUsed(bool isBeingUsed)
+bool ASpaceShipSurvivalShipControls::CheckIfBeingUsed()
 {
-	Server_SetIsBeingUsed(isBeingUsed);
+	if(Ship == nullptr) return true;
+	APlayerController* playerController = Cast<APlayerController>(Ship->GetController());
+
+	//If the controller on the ship is a player controller then it is in use
+	if (playerController != nullptr) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
-void ASpaceShipSurvivalShipControls::Server_SetIsBeingUsed_Implementation(bool isBeingUsed)
+void ASpaceShipSurvivalShipControls::OnExitShip()
 {
-	bIsBeingUsed = isBeingUsed;
+	if (PromptWidget != nullptr && PromptWidget->IsInViewport()) {
+		PromptWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	if(Ship != nullptr){
+		Ship->OnExitShip.RemoveAll(this);
+	}
 }
 
 void ASpaceShipSurvivalShipControls::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ASpaceShipSurvivalShipControls, bIsBeingUsed);
 	DOREPLIFETIME(ASpaceShipSurvivalShipControls, Ship);
 }
 
