@@ -58,7 +58,7 @@ void ASpaceShipSurvivalShip::BeginPlay()
 	}
 
 	if (HasAuthority()) {
-		NetUpdateFrequency = 10;
+		NetUpdateFrequency = 1;
 	}
 	
 }
@@ -178,11 +178,18 @@ void ASpaceShipSurvivalShip::Exit(const FInputActionValue& Value)
 			characterController->PossessDefaultPawn();
 		}
 	}
+
+	Restart();
 }
 
 void ASpaceShipSurvivalShip::Restart()
 {
 	Super::Restart();
+
+	if(MovementReplicator != nullptr){
+		MovementReplicator->Client_ForceUpdate();
+	}
+
 	APlayerController* controller = Cast<APlayerController>(GetController());
 	if(controller == nullptr) return;
 	UE_LOG(LogTemp, Warning, TEXT("Being Possessed"));
@@ -191,4 +198,7 @@ void ASpaceShipSurvivalShip::Restart()
 		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
 		Subsystem->AddMappingContext(ShipMappingContext, 0);
 	}
+
+	
+	
 }
