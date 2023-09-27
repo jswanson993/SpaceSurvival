@@ -7,6 +7,8 @@
 #include "InputActionValue.h"
 #include "SpaceShipSurvivalShip.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExit);
+
 UCLASS()
 class SPACESHIPSURVIVAL_API ASpaceShipSurvivalShip : public APawn
 {
@@ -52,8 +54,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UShipMovementReplicator* MovementReplicator;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	class ASpaceShipSurvivalShipControls* Controls;
+public:
+	UPROPERTY()
+	FOnExit OnExitShip;
 
 public:
 	// Sets default values for this pawn's properties

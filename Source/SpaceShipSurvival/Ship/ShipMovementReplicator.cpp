@@ -55,14 +55,26 @@ void UShipMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickType
 	}
 }
 
+void UShipMovementReplicator::Client_ForceUpdate_Implementation()
+{
+	if(GetOwnerRole() == ROLE_SimulatedProxy){
+		ClientTimeBetweenLastUpdates = ClientTimeSinceLastUpdate;
+		ClientTimeSinceLastUpdate = 0;
+		GEngine->AddOnScreenDebugMessage(0, 1, FColor::Green, TEXT("Recieved Update"));
+		//OnRep_ServerState();
+	}
+}
+
 void UShipMovementReplicator::ClientTick(float DeltaTime)
 {
 	ClientTimeSinceLastUpdate += DeltaTime;
 
 	if(ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) return;
-	if(MovementComponent == nullptr) return;
 
+	if(MovementComponent == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("Time Since Last Update: %f. Time Between Last Updates: %f"), ClientTimeSinceLastUpdate, ClientTimeBetweenLastUpdates);
 	float lerpRatio =  ClientTimeSinceLastUpdate / ClientTimeBetweenLastUpdates;
+
 
 	FHermiteCubicSpline spline = CreateSpline();
 
@@ -100,7 +112,6 @@ bool UShipMovementReplicator::Server_SendMove_Validate(FShipMove Move) {
 void UShipMovementReplicator::UpdateServerState(const FShipMove& Move)
 {
 	if(MovementComponent == nullptr) return;
-
 	ServerState.Velocity = MovementComponent->GetVelocity();
 	ServerState.Transform = GetOwner()->GetActorTransform();
 	ServerState.LastMove = Move;
@@ -149,15 +160,22 @@ void UShipMovementReplicator::AutonomousProxy_OnRep_ServerState()
 void UShipMovementReplicator::SimulatedProxy_OnRep_ServerState()
 {
 	if(MovementComponent == nullptr) return;
-
+	UE_LOG(LogTemp, Warning, TEXT("Updating"));
 	ClientTimeBetweenLastUpdates = ClientTimeSinceLastUpdate;
 	ClientTimeSinceLastUpdate = 0;
 
 	if(MeshOffsetRoot != nullptr)
 	{
+		//UE_LOG(LogTemp, Warning, TEXT("Mesh Offset Root Location: %s"), *MeshOffsetRoot->GetComponentLocation().ToString());
 		ClientStartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
 		ClientStartTransform.SetRotation(MeshOffsetRoot->GetComponentQuat());
 	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Couldnt find Mesh Offset root"));
+		ClientStartTransform.SetLocation(GetOwner()->GetActorLocation());
+		ClientStartTransform.SetRotation(GetOwner()->GetActorQuat());
+	}
+
 	ClientStartVelocity = MovementComponent->GetVelocity();
 	
 	GetOwner()->SetActorTransform(ServerState.Transform);
@@ -175,9 +193,13 @@ FHermiteCubicSpline UShipMovementReplicator::CreateSpline()
 
 void UShipMovementReplicator::InterpolateLocation(FHermiteCubicSpline &Spline, float LerpRatio)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Lerp Ratio: %f"), LerpRatio)
 	FVector nextLocation = Spline.InterpolateLocation(LerpRatio);
 	if(MeshOffsetRoot != nullptr){
+		//UE_LOG(LogTemp, Error, TEXT("Next Location: %s"), *nextLocation.ToString())
 		MeshOffsetRoot->SetWorldLocation(nextLocation);
+	}else{
+		GetOwner()->SetActorLocation(nextLocation);
 	}
 }
 
@@ -195,6 +217,9 @@ void UShipMovementReplicator::InterpolateRotation(float LerpRatio)
 
 	if(MeshOffsetRoot != nullptr){
 		MeshOffsetRoot->SetWorldRotation(nextRotation);
+	}
+	else {
+		GetOwner()->SetActorRotation(nextRotation);
 	}
 }
 
