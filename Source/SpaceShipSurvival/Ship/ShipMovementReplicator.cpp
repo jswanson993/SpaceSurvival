@@ -39,8 +39,6 @@ void UShipMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickType
 
 	FShipMove Move = MovementComponent->GetLastMove();
 
-
-
 	if(GetOwnerRole() == ROLE_AutonomousProxy){
 		UnacknowlegedMoves.Add(Move);
 		Server_SendMove(Move);
@@ -55,16 +53,6 @@ void UShipMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickType
 	}
 }
 
-void UShipMovementReplicator::Client_ForceUpdate_Implementation()
-{
-	if(GetOwnerRole() == ROLE_SimulatedProxy){
-		ClientTimeBetweenLastUpdates = ClientTimeSinceLastUpdate;
-		ClientTimeSinceLastUpdate = 0;
-		GEngine->AddOnScreenDebugMessage(0, 1, FColor::Green, TEXT("Recieved Update"));
-		//OnRep_ServerState();
-	}
-}
-
 void UShipMovementReplicator::ClientTick(float DeltaTime)
 {
 	ClientTimeSinceLastUpdate += DeltaTime;
@@ -72,9 +60,7 @@ void UShipMovementReplicator::ClientTick(float DeltaTime)
 	if(ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) return;
 
 	if(MovementComponent == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("Time Since Last Update: %f. Time Between Last Updates: %f"), ClientTimeSinceLastUpdate, ClientTimeBetweenLastUpdates);
 	float lerpRatio =  ClientTimeSinceLastUpdate / ClientTimeBetweenLastUpdates;
-
 
 	FHermiteCubicSpline spline = CreateSpline();
 
@@ -160,13 +146,11 @@ void UShipMovementReplicator::AutonomousProxy_OnRep_ServerState()
 void UShipMovementReplicator::SimulatedProxy_OnRep_ServerState()
 {
 	if(MovementComponent == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("Updating"));
 	ClientTimeBetweenLastUpdates = ClientTimeSinceLastUpdate;
 	ClientTimeSinceLastUpdate = 0;
 
 	if(MeshOffsetRoot != nullptr)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Mesh Offset Root Location: %s"), *MeshOffsetRoot->GetComponentLocation().ToString());
 		ClientStartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
 		ClientStartTransform.SetRotation(MeshOffsetRoot->GetComponentQuat());
 	}
@@ -193,7 +177,6 @@ FHermiteCubicSpline UShipMovementReplicator::CreateSpline()
 
 void UShipMovementReplicator::InterpolateLocation(FHermiteCubicSpline &Spline, float LerpRatio)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Lerp Ratio: %f"), LerpRatio)
 	FVector nextLocation = Spline.InterpolateLocation(LerpRatio);
 	if(MeshOffsetRoot != nullptr){
 		//UE_LOG(LogTemp, Error, TEXT("Next Location: %s"), *nextLocation.ToString())

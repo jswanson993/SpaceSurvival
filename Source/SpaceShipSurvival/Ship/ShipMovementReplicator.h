@@ -68,8 +68,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetMeshOffsetRoot(USceneComponent* Root) {MeshOffsetRoot = Root;}
-	UFUNCTION(NetMulticast, Reliable)
-	void Client_ForceUpdate();
 private:
 	
 	void ClientTick(float DeltaTime);

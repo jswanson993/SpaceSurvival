@@ -124,14 +124,11 @@ void ASpaceShipSurvivalCharacter::PossessedBy(AController* NewController)
 void ASpaceShipSurvivalCharacter::Restart()
 {
 	Super::Restart();
-	UE_LOG(LogTemp, Warning, TEXT("Restarting"));
 
 	ASpaceSurvivalCharacterController* controller = Cast<ASpaceSurvivalCharacterController>(GetController());
 	if (controller == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("Resetting player mapping context"));
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(controller->GetLocalPlayer())) {
 		Subsystem->ClearAllMappings();
-		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 }

@@ -65,9 +65,75 @@ void ASpaceShipSurvivalShip::BeginPlay()
 
 void ASpaceShipSurvivalShip::PossessedBy(AController* NewController)
 {
-	Super::PossessedBy(NewController);
+	//Intentionally not calling Super::PossessedBy because it will trigger an unwanted network update
+	//Copying the rest of PossessedBy implementation instead
+	SetOwner(NewController);
+
+	AController* const OldController = Controller;
+
+	Controller = NewController;
+
+#if UE_WITH_IRIS
+	// The owning connection depends on the Controller having the new value.
+	UpdateOwningNetConnection();
+#endif
+
+	if (Controller->PlayerState != nullptr)
+	{
+		SetPlayerState(Controller->PlayerState);
+	}
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (GetNetMode() != NM_Standalone)
+		{
+			SetReplicates(true);
+			SetAutonomousProxy(true);
+		}
+	}
+	else
+	{
+		CopyRemoteRoleFrom(GetDefault<APawn>());
+	}
+
+	// dispatch Blueprint event if necessary
+	if (OldController != NewController)
+	{
+		ReceivePossessed(Controller);
+
+		NotifyControllerChanged();
+	}
 	//Reset pawn so input can be remapped
 	Restart();
+}
+
+void ASpaceShipSurvivalShip::UnPossessed()
+{
+	//Intentionally not calling Super::UnPossessed because it will trigger an unwanted network update
+	//Copying the rest of UnPossesed implementation instead
+	AController* const OldController = Controller;
+
+	SetPlayerState(nullptr);
+	SetOwner(nullptr);
+	Controller = nullptr;
+
+#if UE_WITH_IRIS
+	// The owning connection depends on the Controller having the new value.
+	UpdateOwningNetConnection();
+#endif
+
+	// Unregister input component if we created one
+	DestroyPlayerInputComponent();
+
+	// dispatch Blueprint event if necessary
+	if (OldController)
+	{
+		ReceiveUnpossessed(OldController);
+	}
+
+	NotifyControllerChanged();
+
+	ConsumeMovementInputVector();
 }
 
 
@@ -105,7 +171,6 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Using Enhanced Input"));
 		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyThrottle);
 		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::ThrottleComplete);
 		EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::ApplyTurn);
@@ -113,12 +178,7 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::TurnComplete);
 		EnhancedInputComponent->BindAction(YawAction, ETriggerEvent::Completed, this, &ASpaceShipSurvivalShip::YawComplete);
 		EnhancedInputComponent->BindAction(ExitAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalShip::Exit);
-		UE_LOG(LogTemp, Warning, TEXT("Bound Actions for Space Ship"));
 	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("Not Using Enhanced Input"));
-	}
-
 }
 
 void ASpaceShipSurvivalShip::ApplyThrottle(const FInputActionValue& Value)
@@ -186,19 +246,10 @@ void ASpaceShipSurvivalShip::Restart()
 {
 	Super::Restart();
 
-	if(MovementReplicator != nullptr){
-		MovementReplicator->Client_ForceUpdate();
-	}
-
 	APlayerController* controller = Cast<APlayerController>(GetController());
 	if(controller == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("Being Possessed"));
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(controller->GetLocalPlayer())) {
 		Subsystem->ClearAllMappings();
-		UE_LOG(LogTemp, Warning, TEXT("Adding Mapping Context"));
 		Subsystem->AddMappingContext(ShipMappingContext, 0);
 	}
-
-	
-	
 }
