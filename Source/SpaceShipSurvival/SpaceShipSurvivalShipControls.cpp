@@ -23,6 +23,8 @@ ASpaceShipSurvivalShipControls::ASpaceShipSurvivalShipControls()
 void ASpaceShipSurvivalShipControls::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	Ship = Cast<ASpaceShipSurvivalShip>(this->GetParentActor());
 }
 
 void ASpaceShipSurvivalShipControls::Interact_Implementation(APlayerController* PlayerController)
@@ -35,6 +37,7 @@ void ASpaceShipSurvivalShipControls::Interact_Implementation(APlayerController* 
 			PromptWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 		Ship->OnExitShip.AddDynamic(this, &ASpaceShipSurvivalShipControls::OnExitShip);
+		controller->GetPawn()->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 		controller->Server_Possess(Ship);
 	}
 }
@@ -60,6 +63,16 @@ void ASpaceShipSurvivalShipControls::OnExitShip()
 	}
 	if(Ship != nullptr){
 		Ship->OnExitShip.RemoveAll(this);
+	}
+
+	TArray<AActor*> attachedActors;
+	GetAttachedActors(attachedActors);
+
+	if (attachedActors.Num() > 1) {
+		UE_LOG(LogTemp, Warning, TEXT("Ship Controls should only have 1 attached actor. Found %d"), attachedActors.Num());
+	}
+	if (attachedActors.Num() == 1) {
+		attachedActors[0]->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}
 }
 

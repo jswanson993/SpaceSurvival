@@ -163,6 +163,7 @@ void UShipMovementReplicator::SimulatedProxy_OnRep_ServerState()
 	ClientStartVelocity = MovementComponent->GetVelocity();
 	
 	GetOwner()->SetActorTransform(ServerState.Transform);
+	MeshOffsetRoot->SetWorldTransform(ClientStartTransform);
 }
 
 FHermiteCubicSpline UShipMovementReplicator::CreateSpline()
