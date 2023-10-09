@@ -25,8 +25,10 @@ void AInteractable::BeginPlay()
 
 void AInteractable::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Character = Cast<ASpaceShipSurvivalCharacter>(OtherActor);
-	if (Character != nullptr && Character->IsLocallyControlled()) {
+	ASpaceShipSurvivalCharacter* OtherCharacter = Cast<ASpaceShipSurvivalCharacter>(OtherActor);
+	//Verify that the overlapping character is a local player and they are not part currently included in the set of characters inside the overlap
+	if (OtherCharacter != nullptr && OtherCharacter->IsLocallyControlled() && !Characters.Contains(OtherCharacter)) {
+		Characters.Add(OtherCharacter);
 		UWorld* world = GetWorld();
 		if (world != nullptr && PromptWidgetClass != nullptr) {
 			if (PromptWidget == nullptr) {
@@ -36,8 +38,9 @@ void AInteractable::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 				PromptWidget->AddToViewport();
 			}
 		}
-
-		Character->OnInteract.AddDynamic(this, &AInteractable::Interact);
+		if (!OtherCharacter->OnInteract.GetAllObjects().Contains(this)) {
+			OtherCharacter->OnInteract.AddDynamic(this, &AInteractable::Interact);
+		}
 		
 	}
 }
@@ -47,14 +50,17 @@ void AInteractable::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 	auto OtherCharacter = Cast<ASpaceShipSurvivalCharacter>(OtherActor);
 
-	if(OtherCharacter != nullptr && OtherCharacter->IsLocallyControlled() && OtherCharacter == Character){
+	//Verify that the no longer overlapping character is a local player and that they were included in the set of characters inside the overlap
+	if(OtherCharacter != nullptr && OtherCharacter->IsLocallyControlled() && Characters.Contains(OtherCharacter)){
 		if(PromptWidget != nullptr && PromptWidget->IsInViewport()){
 			PromptWidget->RemoveFromParent();
 		}
 
-		if (Character != nullptr) {
-			Character->OnInteract.RemoveAll(this);
+		if (OtherCharacter != nullptr) {
+			OtherCharacter->OnInteract.RemoveAll(this);
 		}
+
+		Characters.Remove(OtherCharacter);
 	}
 
 }

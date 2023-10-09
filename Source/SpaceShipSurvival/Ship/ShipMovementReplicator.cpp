@@ -162,7 +162,11 @@ void UShipMovementReplicator::SimulatedProxy_OnRep_ServerState()
 
 	ClientStartVelocity = MovementComponent->GetVelocity();
 	
-	GetOwner()->SetActorTransform(ServerState.Transform);
+	GetOwner()->SetActorTransform(ClientStartTransform);
+	if(MeshOffsetRoot != nullptr){
+		GetOwner()->SetActorTransform(ServerState.Transform);
+		MeshOffsetRoot->SetWorldTransform(ClientStartTransform);
+	}
 }
 
 FHermiteCubicSpline UShipMovementReplicator::CreateSpline()
@@ -179,7 +183,6 @@ void UShipMovementReplicator::InterpolateLocation(FHermiteCubicSpline &Spline, f
 {
 	FVector nextLocation = Spline.InterpolateLocation(LerpRatio);
 	if(MeshOffsetRoot != nullptr){
-		//UE_LOG(LogTemp, Error, TEXT("Next Location: %s"), *nextLocation.ToString())
 		MeshOffsetRoot->SetWorldLocation(nextLocation);
 	}else{
 		GetOwner()->SetActorLocation(nextLocation);

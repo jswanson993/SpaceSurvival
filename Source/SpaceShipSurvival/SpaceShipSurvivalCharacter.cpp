@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
+#include "AIController.h"
 
 #include "SpaceSurvivalCharacterController.h"
 
@@ -121,6 +122,11 @@ void ASpaceShipSurvivalCharacter::PossessedBy(AController* NewController)
 	Restart();
 }
 
+void ASpaceShipSurvivalCharacter::UnPossessed()
+{
+	Super::UnPossessed();
+}
+
 void ASpaceShipSurvivalCharacter::Restart()
 {
 	Super::Restart();
@@ -166,4 +172,31 @@ void ASpaceShipSurvivalCharacter::SetHasRifle(bool bNewHasRifle)
 bool ASpaceShipSurvivalCharacter::GetHasRifle()
 {
 	return bHasRifle;
+}
+
+void ASpaceShipSurvivalCharacter::GetInSeat(AActor* OtherActor)
+{ 
+	Server_AttachToActor(OtherActor);
+}
+
+void ASpaceShipSurvivalCharacter::GetOutOfSeat()
+{
+	Server_DetachFromActor();
+}
+
+void ASpaceShipSurvivalCharacter::Server_AttachToActor_Implementation(AActor* OtherActor)
+{
+	FAttachmentTransformRules attachmentRules = FAttachmentTransformRules::KeepWorldTransform;
+	AttachToActor(OtherActor, attachmentRules);
+}
+
+void ASpaceShipSurvivalCharacter::Server_DetachFromActor_Implementation()
+{
+	FDetachmentTransformRules detachmentRules = FDetachmentTransformRules::KeepWorldTransform;
+	DetachFromActor(detachmentRules);
+
+	if(OldParent != nullptr){
+		FAttachmentTransformRules attachmentRules = FAttachmentTransformRules::KeepWorldTransform;
+		AttachToActor(OldParent, attachmentRules);
+	}
 }

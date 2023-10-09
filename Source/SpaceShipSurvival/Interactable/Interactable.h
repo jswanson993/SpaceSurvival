@@ -12,7 +12,7 @@ class SPACESHIPSURVIVAL_API AInteractable : public AActor
 	GENERATED_BODY()
 
 private:
-	class ASpaceShipSurvivalCharacter* Character;
+	TSet<class ASpaceShipSurvivalCharacter*> Characters;
 	UPROPERTY(EditAnywhere, Category = "Trigger")
 	class USphereComponent* InteractVolume;
 
