@@ -26,7 +26,6 @@ void AInteractable::BeginPlay()
 void AInteractable::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ASpaceShipSurvivalCharacter* OtherCharacter = Cast<ASpaceShipSurvivalCharacter>(OtherActor);
-
 	//Verify that the overlapping character is a local player and they are not part currently included in the set of characters inside the overlap
 	if (OtherCharacter != nullptr && OtherCharacter->IsLocallyControlled() && !Characters.Contains(OtherCharacter)) {
 		Characters.Add(OtherCharacter);

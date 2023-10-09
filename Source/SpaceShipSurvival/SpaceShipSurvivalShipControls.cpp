@@ -6,14 +6,18 @@
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 #include "Ship/SpaceShipSurvivalShip.h"
 #include "SpaceSurvivalCharacterController.h"
+#include "SpaceShipSurvivalCharacter.h"
 
 ASpaceShipSurvivalShipControls::ASpaceShipSurvivalShipControls()
 {
 	Collider = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
-	Collider->SetupAttachment(RootComponent);
+	//Collider->SetupAttachment(RootComponent);
+	RootComponent = Collider;
 	Seat = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Seat"));
 	Seat->SetupAttachment(Collider);
 
@@ -37,9 +41,15 @@ void ASpaceShipSurvivalShipControls::Interact_Implementation(APlayerController* 
 			PromptWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 		Ship->OnExitShip.AddDynamic(this, &ASpaceShipSurvivalShipControls::OnExitShip);
-		controller->GetPawn()->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+		AttachPawnToControls(controller->GetPawn());
 		controller->Server_Possess(Ship);
 	}
+}
+
+void ASpaceShipSurvivalShipControls::AttachPawnToControls(APawn* PawnToAttach)
+{
+	ASpaceShipSurvivalCharacter* playerCharacter = Cast<ASpaceShipSurvivalCharacter>(PawnToAttach);
+	playerCharacter->GetInSeat(this);
 }
 
 bool ASpaceShipSurvivalShipControls::CheckIfBeingUsed()
@@ -58,21 +68,28 @@ bool ASpaceShipSurvivalShipControls::CheckIfBeingUsed()
 
 void ASpaceShipSurvivalShipControls::OnExitShip()
 {
+	TArray<AActor*> attachedActors;
+	GetAttachedActors(attachedActors);
+	if (attachedActors.Num() > 1) {
+		UE_LOG(LogTemp, Warning, TEXT("Ship Controls should only have 1 attached actor. Found %d"), attachedActors.Num());
+	}
+
+	if (attachedActors.Num() == 1) {
+
+		FDetachmentTransformRules detachmentRules = FDetachmentTransformRules::KeepWorldTransform;
+		detachmentRules.RotationRule = EDetachmentRule::KeepRelative;
+		ACharacter* playerCharacter = Cast<ACharacter>(attachedActors[0]);
+		playerCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+
+		UE_LOG(LogTemp, Warning, TEXT("Detatching"));
+		playerCharacter->DetachFromActor(detachmentRules);
+	}
+
 	if (PromptWidget != nullptr && PromptWidget->IsInViewport()) {
 		PromptWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 	if(Ship != nullptr){
 		Ship->OnExitShip.RemoveAll(this);
-	}
-
-	TArray<AActor*> attachedActors;
-	GetAttachedActors(attachedActors);
-
-	if (attachedActors.Num() > 1) {
-		UE_LOG(LogTemp, Warning, TEXT("Ship Controls should only have 1 attached actor. Found %d"), attachedActors.Num());
-	}
-	if (attachedActors.Num() == 1) {
-		attachedActors[0]->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}
 }
 

@@ -30,6 +30,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Interact_Implementation(class APlayerController* PlayerController) override;
+	virtual void AttachPawnToControls(class APawn* PlayerController);
 
 public:
 	UFUNCTION(BlueprintCallable)

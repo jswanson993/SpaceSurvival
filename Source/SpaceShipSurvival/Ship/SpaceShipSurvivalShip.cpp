@@ -58,7 +58,7 @@ void ASpaceShipSurvivalShip::BeginPlay()
 	}
 
 	if (HasAuthority()) {
-		NetUpdateFrequency = 1;
+		NetUpdateFrequency = 10;
 	}
 	
 }
@@ -134,6 +134,7 @@ void ASpaceShipSurvivalShip::UnPossessed()
 	NotifyControllerChanged();
 
 	ConsumeMovementInputVector();
+	
 }
 
 
@@ -184,6 +185,7 @@ void ASpaceShipSurvivalShip::SetupPlayerInputComponent(UInputComponent* PlayerIn
 void ASpaceShipSurvivalShip::ApplyThrottle(const FInputActionValue& Value)
 {
 	if(MovementComponent == nullptr) return;
+
 	MovementComponent->SetThrottle(Value.Get<FInputActionValue::Axis1D>());
 }
 

@@ -45,6 +45,8 @@ class ASpaceShipSurvivalCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
 	class UInputAction* InteractAction;
 
+	AActor* OldParent;
+
 	
 public:
 	ASpaceShipSurvivalCharacter();
@@ -75,6 +77,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
 
+	void GetInSeat(AActor* OtherActor);
+	void GetOutOfSeat();
+
 	virtual void Restart() override;
 protected:
 	/** Called for movement input */
@@ -86,6 +91,12 @@ protected:
 	void Interact();
 
 	virtual void PossessedBy(AController* NewController) override;
+	virtual void UnPossessed() override;
+
+	UFUNCTION(Server, Unreliable)
+	void Server_AttachToActor(AActor* OtherActor);
+	UFUNCTION(Server, Unreliable)
+	void Server_DetachFromActor();
 
 
 protected:
