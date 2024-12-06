@@ -52,7 +52,7 @@ void USettingsMenu::OnApplyClicked()
 void USettingsMenu::SetupResolution()
 {
 	UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
-	FVector2D currentResolution;
+	//FVector2D currentResolution;
 
 	if (!ensure(ResolutionComboBox != nullptr)) return;
 	for (auto resolution : Resolutions) {

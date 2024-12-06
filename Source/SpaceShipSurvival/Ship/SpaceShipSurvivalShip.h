@@ -21,7 +21,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta=(AllowPrivateAccess = "true"))
 	USceneComponent* MeshOffsetRoot;
 
-	UPROPERTY(VisibleAnywhere, Category=Mesh)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta=(AllowPrivateAccess = "true"))
 	UStaticMeshComponent* HullMesh;
 
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -67,6 +67,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnHullHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
+		FVector NormalImpulse, const FHitResult &HitResult);
 
 public:	
 	// Called every frame

@@ -13,6 +13,9 @@
 
 #include "ShipMovementComponent.h"
 #include "ShipMovementReplicator.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "SpaceShipSurvival/SpaceSurvivalCharacterController.h"
 #include "SpaceShipSurvival/SpaceShipSurvivalShipControls.h"
 
@@ -56,10 +59,13 @@ void ASpaceShipSurvivalShip::BeginPlay()
 			Subsystem->AddMappingContext(ShipMappingContext, 0);
 		}
 	}
-
-	if (HasAuthority()) {
-		NetUpdateFrequency = 10;
-	}
+	HullMesh->OnComponentHit.AddDynamic(this, &ASpaceShipSurvivalShip::OnHullHit);
+	
+	SetNetUpdateFrequency(1);
+	//NetUpdateFrequency = 15;
+	//if (HasAuthority()) {
+	//	NetUpdateFrequency = 15;
+	//}
 	
 }
 
@@ -135,6 +141,20 @@ void ASpaceShipSurvivalShip::UnPossessed()
 
 	ConsumeMovementInputVector();
 	
+}
+
+void ASpaceShipSurvivalShip::OnHullHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& HitResult)
+{
+	if(GetLocalRole() <= ROLE_SimulatedProxy) return;
+	UE_LOG(LogTemp, Warning, TEXT("Hit"))
+	ACharacter* OtherCharacter = Cast<ACharacter>(OtherActor);
+	if(OtherCharacter != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Adding force"))
+		//OtherCharacter->GetCharacterMovement()->AddForce(NormalImpulse * MovementComponent->GetVelocity());
+		//MovementComponent->SetVelocity(FVector::ZeroVector);
+	}
 }
 
 

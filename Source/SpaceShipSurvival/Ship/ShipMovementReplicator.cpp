@@ -64,8 +64,35 @@ void UShipMovementReplicator::ClientTick(float DeltaTime)
 
 	FHermiteCubicSpline spline = CreateSpline();
 
-	InterpolateLocation(spline, lerpRatio);
+	/*
+	MovementComponent->SetVelocity(ServerState.Velocity);
+	if(MeshOffsetRoot != nullptr){
+		double ClientDistance = FVector::Distance(MeshOffsetRoot->GetComponentLocation(), ServerState.Transform.GetLocation());
+		if(ClientDistance > 100)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), ClientDistance);
+			MeshOffsetRoot->SetWorldLocation(spline.InterpolateLocation(.2));
+			MeshOffsetRoot->SetWorldRotation(ServerState.Transform.GetRotation());
+			MovementComponent->SetVelocity(ServerState.Velocity + ServerState.Velocity * .8);
+		}
+		
+		//MeshOffsetRoot->SetWorldLocation(ServerState.Transform.GetLocation());
+		FVector Translation = MovementComponent->GetVelocity() * DeltaTime * 100;
+		FHitResult CollisionResult;
+		MeshOffsetRoot->AddWorldOffset(Translation, true, &CollisionResult);
+
+		if (CollisionResult.IsValidBlockingHit()) {
+			UE_LOG(LogTemp, Warning, TEXT("Blocking Hit"));
+			MovementComponent->SetVelocity(FVector::Zero());
+		}
+	}else{
+		UE_LOG(LogTemp, Warning, TEXT("Setting Actor Transform"));
+		GetOwner()->SetActorLocation(ServerState.Transform.GetLocation());
+		GetOwner()->SetActorRotation(ServerState.Transform.GetRotation());
+	}
+	*/
 	InterpolateVelocity(spline, lerpRatio);
+	InterpolateLocation(spline, lerpRatio);
 	InterpolateRotation(lerpRatio);
 }
 
@@ -183,7 +210,16 @@ void UShipMovementReplicator::InterpolateLocation(FHermiteCubicSpline &Spline, f
 {
 	FVector nextLocation = Spline.InterpolateLocation(LerpRatio);
 	if(MeshOffsetRoot != nullptr){
-		MeshOffsetRoot->SetWorldLocation(nextLocation);
+		FHitResult Hit;
+		FVector currentLocation = MeshOffsetRoot->GetComponentLocation();
+		UE_LOG(LogTemp, Warning, TEXT("Current Location Then"))
+		MeshOffsetRoot->SetWorldLocation(nextLocation, true, &Hit);
+		if(Hit.IsValidBlockingHit())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Current Location Now"))
+			MeshOffsetRoot->SetWorldLocation(currentLocation);
+			
+		}
 	}else{
 		GetOwner()->SetActorLocation(nextLocation);
 	}

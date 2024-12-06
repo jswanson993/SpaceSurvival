@@ -71,7 +71,7 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = Fuel, meta = (AllowPrivateAccess = "true"))
 	float FuelRemaining;
 	//Cannot go faster than Speed of Light. (m/s)
-	const float MaxVelocity = 299792458;
+	const float MaxVelocity = 299792458.f;
 
 	FVector Velocity;
 

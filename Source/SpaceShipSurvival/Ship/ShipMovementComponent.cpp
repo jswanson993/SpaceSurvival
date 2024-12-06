@@ -3,6 +3,9 @@
 
 #include "ShipMovementComponent.h"
 
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/Character.h"
+
 // Sets default values for this component's properties
 UShipMovementComponent::UShipMovementComponent()
 {
@@ -68,9 +71,10 @@ void UShipMovementComponent::SimulateMove(FShipMove Move)
 void UShipMovementComponent::UpdateLocationFromVelocity(FShipMove& Move)
 {
 	FVector Translation = Velocity * Move.DeltaTime * 100;
-	FHitResult CollisionResult;
-	GetOwner()->AddActorWorldOffset(Translation, true, &CollisionResult);
 
+	FHitResult CollisionResult;
+	
+	GetOwner()->AddActorWorldOffset(Translation, true, &CollisionResult);
 	if (CollisionResult.IsValidBlockingHit()) {
 		UE_LOG(LogTemp, Warning, TEXT("Blocking Hit"));
 		Velocity = FVector::Zero();
