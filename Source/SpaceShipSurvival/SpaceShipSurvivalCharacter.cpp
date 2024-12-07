@@ -12,6 +12,7 @@
 #include "AIController.h"
 
 #include "SpaceSurvivalCharacterController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ASpaceShipSurvivalCharacter
@@ -59,6 +60,42 @@ void ASpaceShipSurvivalCharacter::BeginPlay()
 
 //////////////////////////////////////////////////////////////////////////// Input
 
+void ASpaceShipSurvivalCharacter::WalkingLook(const FVector2D LookInput)
+{
+	FRotator CameraRotation = GetFirstPersonCameraComponent()->GetRelativeRotation();
+	FRotator LookRotation = FRotator(-LookInput.Y, 0, 0);
+	bool LookingUp = CameraRotation.Pitch >= 85 && LookInput.Y < 0.f;
+	bool LookingDown = CameraRotation.Pitch <= -85 && LookInput.Y > 0.f;
+	if (LookingUp || LookingDown)
+	{
+		GetFirstPersonCameraComponent()->AddLocalRotation(LookRotation);
+	}
+
+	FRotator SpinRotation = FRotator(0, LookInput.X, 0);
+	AddActorLocalRotation(SpinRotation);
+}
+
+void ASpaceShipSurvivalCharacter::FlyingLook(const FVector2D LookInput)
+{
+	// add yaw and pitch input
+	//Rotate camera until 90 degrees then rotate capsule
+	FRotator CameraRotation = GetFirstPersonCameraComponent()->GetRelativeRotation();
+	FRotator LookRotation = FRotator(-LookInput.Y, 0, 0);
+	bool LookingUp = CameraRotation.Pitch >= 85 && -LookInput.Y > 0.f;
+	bool LookingDown = CameraRotation.Pitch <= -85 && -LookInput.Y < 0.f;
+	UE_LOG(LogTemp, Warning, TEXT("Camera Pitch: %f"), CameraRotation.Pitch);
+	if (LookingUp || LookingDown)
+	{
+		AddActorLocalRotation(LookRotation);
+	}
+	else
+	{
+		GetFirstPersonCameraComponent()->AddLocalRotation(LookRotation);
+	}
+	FRotator SpinRotation = FRotator(0, LookInput.X, 0);
+	AddActorLocalRotation(SpinRotation);
+}
+
 void ASpaceShipSurvivalCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
@@ -71,6 +108,8 @@ void ASpaceShipSurvivalCharacter::SetupPlayerInputComponent(class UInputComponen
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Move);
 
+		//Rotating
+		EnhancedInputComponent->BindAction(RotateAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Rotate);
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASpaceShipSurvivalCharacter::Look);
@@ -85,12 +124,37 @@ void ASpaceShipSurvivalCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
+	FVector ForwardDirection = FVector::ZeroVector;
+	FVector RightDirection = FVector::ZeroVector;
+	switch (GetCharacterMovement()->MovementMode)
+	{
+	case EMovementMode::MOVE_Walking :
+		ForwardDirection = GetActorForwardVector();
+		RightDirection = GetActorRightVector();
+		break;
+	case EMovementMode::MOVE_Flying :
+		ForwardDirection = GetFirstPersonCameraComponent()->GetForwardVector();
+		RightDirection = GetFirstPersonCameraComponent()->GetRightVector();
+		break;
+	default:
+			break;
+	}
 
 	if (Controller != nullptr)
 	{
 		// add movement 
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-		AddMovementInput(GetActorRightVector(), MovementVector.X);
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+	}
+}
+
+void ASpaceShipSurvivalCharacter::Rotate(const FInputActionValue& Value)
+{
+	float RotateSpeed = Value.Get<float>();
+	if (GetCharacterMovement()->MovementMode != EMovementMode::MOVE_Walking)
+	{
+		FRotator Rotation = FRotator(0, 0, RotateSpeed);
+		AddActorLocalRotation(Rotation);
 	}
 }
 
@@ -99,12 +163,20 @@ void ASpaceShipSurvivalCharacter::Look(const FInputActionValue& Value)
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
+	EMovementMode MovementMode = GetCharacterMovement()->MovementMode;
+	switch (MovementMode)
 	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		case EMovementMode::MOVE_Walking:
+			WalkingLook(LookAxisVector);
+			break;
+
+		case MOVE_Flying:
+			FlyingLook(LookAxisVector);
+			break;
+		default:
+			break;
 	}
+
 }
 
 void ASpaceShipSurvivalCharacter::Interact()
@@ -119,12 +191,20 @@ void ASpaceShipSurvivalCharacter::Interact()
 void ASpaceShipSurvivalCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+	auto PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController != nullptr)
+	{
+		EnableInput(PlayerController);
+	}
 	Restart();
 }
 
 void ASpaceShipSurvivalCharacter::UnPossessed()
 {
 	Super::UnPossessed();
+	auto PlayerController = Cast<APlayerController>(GetController());
+	if(PlayerController == nullptr) return;
+	DisableInput(PlayerController);
 }
 
 void ASpaceShipSurvivalCharacter::Restart()
@@ -175,8 +255,9 @@ bool ASpaceShipSurvivalCharacter::GetHasRifle()
 }
 
 void ASpaceShipSurvivalCharacter::GetInSeat(AActor* OtherActor)
-{ 
+{
 	Server_AttachToActor(OtherActor);
+	GetCharacterMovement()->DisableMovement();
 }
 
 void ASpaceShipSurvivalCharacter::GetOutOfSeat()

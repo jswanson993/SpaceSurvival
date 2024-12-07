@@ -59,7 +59,6 @@ void ASpaceShipSurvivalShip::BeginPlay()
 			Subsystem->AddMappingContext(ShipMappingContext, 0);
 		}
 	}
-	HullMesh->OnComponentHit.AddDynamic(this, &ASpaceShipSurvivalShip::OnHullHit);
 	
 	SetNetUpdateFrequency(1);
 	//NetUpdateFrequency = 15;
@@ -143,21 +142,6 @@ void ASpaceShipSurvivalShip::UnPossessed()
 	
 }
 
-void ASpaceShipSurvivalShip::OnHullHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& HitResult)
-{
-	if(GetLocalRole() <= ROLE_SimulatedProxy) return;
-	UE_LOG(LogTemp, Warning, TEXT("Hit"))
-	ACharacter* OtherCharacter = Cast<ACharacter>(OtherActor);
-	if(OtherCharacter != nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Adding force"))
-		//OtherCharacter->GetCharacterMovement()->AddForce(NormalImpulse * MovementComponent->GetVelocity());
-		//MovementComponent->SetVelocity(FVector::ZeroVector);
-	}
-}
-
-
 FString GetRoleString2(ENetRole Role) {
 
 	switch (Role)
@@ -183,6 +167,7 @@ void ASpaceShipSurvivalShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetRoleString2(GetLocalRole()), this, FColor::White, DeltaTime);
+	RootComponent->ComponentVelocity = MovementComponent->GetVelocity();
 }
 
 // Called to bind functionality to input

@@ -73,7 +73,6 @@ void UShipMovementComponent::UpdateLocationFromVelocity(FShipMove& Move)
 	FVector Translation = Velocity * Move.DeltaTime * 100;
 
 	FHitResult CollisionResult;
-	
 	GetOwner()->AddActorWorldOffset(Translation, true, &CollisionResult);
 	if (CollisionResult.IsValidBlockingHit()) {
 		UE_LOG(LogTemp, Warning, TEXT("Blocking Hit"));

@@ -68,10 +68,6 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
 
-	UFUNCTION(BlueprintCallable)
-	virtual void OnHullHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
-		FVector NormalImpulse, const FHitResult &HitResult);
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

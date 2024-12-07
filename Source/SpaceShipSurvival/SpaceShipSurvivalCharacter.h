@@ -42,6 +42,10 @@ class ASpaceShipSurvivalCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
 
+	/** Move Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	class UInputAction* RotateAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
 	class UInputAction* InteractAction;
 
@@ -88,6 +92,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	void Rotate(const FInputActionValue& Value);
+	
 	void Interact();
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -98,7 +104,9 @@ protected:
 	UFUNCTION(Server, Unreliable)
 	void Server_DetachFromActor();
 
-
+private:
+	void WalkingLook(const FVector2D LookInput);
+	void FlyingLook(const FVector2D LookInput);
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;

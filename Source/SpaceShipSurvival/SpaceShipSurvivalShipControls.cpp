@@ -68,21 +68,28 @@ bool ASpaceShipSurvivalShipControls::CheckIfBeingUsed()
 
 void ASpaceShipSurvivalShipControls::OnExitShip()
 {
-	TArray<AActor*> attachedActors;
-	GetAttachedActors(attachedActors);
-	if (attachedActors.Num() > 1) {
-		UE_LOG(LogTemp, Warning, TEXT("Ship Controls should only have 1 attached actor. Found %d"), attachedActors.Num());
+	TArray<AActor*> AttachedActors;
+	GetAttachedActors(AttachedActors);
+	if (AttachedActors.Num() > 1) {
+		UE_LOG(LogTemp, Warning, TEXT("Ship Controls should only have 1 attached actor. Found %d"), AttachedActors.Num());
 	}
 
-	if (attachedActors.Num() == 1) {
+	if (AttachedActors.Num() == 1) {
 
-		FDetachmentTransformRules detachmentRules = FDetachmentTransformRules::KeepWorldTransform;
-		detachmentRules.RotationRule = EDetachmentRule::KeepRelative;
-		ACharacter* playerCharacter = Cast<ACharacter>(attachedActors[0]);
-		playerCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
-
+		FDetachmentTransformRules DetachmentRules = FDetachmentTransformRules::KeepWorldTransform;
+		//DetachmentRules.RotationRule = EDetachmentRule::KeepRelative;
+		ACharacter* PlayerCharacter = Cast<ACharacter>(AttachedActors[0]);
+		
+		
 		UE_LOG(LogTemp, Warning, TEXT("Detatching"));
-		playerCharacter->DetachFromActor(detachmentRules);
+		PlayerCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Flying;
+		PlayerCharacter->DetachFromActor(DetachmentRules);
+		if (GetAttachParentActor() != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Velocity: %s"), *GetAttachParentActor()->GetVelocity().ToString());
+			//PlayerCharacter->GetCharacterMovement()->Velocity = GetAttachParentActor()->GetVelocity();
+		}
+		
 	}
 
 	if (PromptWidget != nullptr && PromptWidget->IsInViewport()) {
